@@ -3,28 +3,34 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import { useSignIn } from '../lib/ui';
 
-/** Cargo brand mark — interlocking swirl, approximated from the Cargo logo.
- *  Swap for the official asset when available. */
-function CargoMark() {
-  return (
-    <svg className="brand-mark" viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
-      <path
-        d="M20 7 C12 7 7 12 7 19.5 C7 25.5 11 29.5 16 29.5 C20.5 29.5 23.5 26.5 23.5 22.2 C23.5 18.5 21.2 16 18 16"
-        fill="none"
-        stroke="var(--navy)"
-        strokeWidth="3.6"
-        strokeLinecap="round"
-      />
-      <path
-        d="M20 33 C28 33 33 28 33 20.5 C33 14.5 29 10.5 24 10.5 C19.5 10.5 16.5 13.5 16.5 17.8 C16.5 21.5 18.8 24 22 24"
-        fill="none"
-        stroke="var(--rust)"
-        strokeWidth="3.6"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
+/* Modern, consistent line icons (1.75 stroke, rounded). */
+const HistoryIcon = ({ size = 21 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 4v4h4" />
+    <path d="M3.5 9a8.5 8.5 0 1 1-1 4" />
+    <path d="M12 8v4.2l3 1.8" />
+  </svg>
+);
+const UserIcon = ({ size = 21 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="8" r="3.25" />
+    <path d="M5.5 19.5a6.5 6.5 0 0 1 13 0" />
+  </svg>
+);
+const HelpIcon = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M9.6 9.2a2.4 2.4 0 1 1 3.4 2.2c-.8.4-1 .9-1 1.6" />
+    <path d="M12 16.5h.01" />
+  </svg>
+);
+const SignOutIcon = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <path d="m16 17 5-5-5-5" />
+    <path d="M21 12H9" />
+  </svg>
+);
 
 export function NavBar() {
   const { user, configured, signOut } = useAuth();
@@ -59,11 +65,8 @@ export function NavBar() {
     <nav className="navbar">
       <div className="navbar-inner wrap">
         <Link to="/" className="brand" aria-label="Cargo Provisions — home">
-          <CargoMark />
-          <span className="brand-word">
-            cargo
-            <span className="brand-sub">Provisions</span>
-          </span>
+          <img className="brand-logo" src="/Centered_Logo.svg" alt="Cargo" />
+          <span className="brand-sub">Provisions</span>
         </Link>
 
         <div className="nav-actions">
@@ -74,11 +77,7 @@ export function NavBar() {
             title="Order history"
             onClick={() => (configured && user ? go('/account') : openSignIn())}
           >
-            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 3v5h5" />
-              <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8" />
-              <path d="M12 7v5l3 2" />
-            </svg>
+            <HistoryIcon />
           </button>
 
           {/* Account */}
@@ -90,14 +89,7 @@ export function NavBar() {
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen((o) => !o)}
             >
-              {user ? (
-                <span className="avatar">{initial}</span>
-              ) : (
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
-                </svg>
-              )}
+              {user ? <span className="avatar">{initial}</span> : <UserIcon size={22} />}
             </button>
 
             {menuOpen && (
@@ -111,26 +103,15 @@ export function NavBar() {
                       <div className="acct-head-email">{user.email}</div>
                     </div>
                     <button className="acct-item" role="menuitem" onClick={() => go('/account')}>
-                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="8" r="4" />
-                        <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
-                      </svg>
+                      <UserIcon size={18} />
                       My profile
                     </button>
                     <button className="acct-item" role="menuitem" onClick={() => go('/account')}>
-                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M3 3v5h5" />
-                        <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8" />
-                        <path d="M12 7v5l3 2" />
-                      </svg>
+                      <HistoryIcon size={18} />
                       Order history
                     </button>
                     <button className="acct-item" role="menuitem" onClick={() => go('/help')}>
-                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="9" />
-                        <path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7" />
-                        <path d="M12 17h.01" />
-                      </svg>
+                      <HelpIcon size={18} />
                       Help
                     </button>
                     <div className="acct-divider" />
@@ -142,11 +123,7 @@ export function NavBar() {
                         void signOut();
                       }}
                     >
-                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                        <path d="m16 17 5-5-5-5" />
-                        <path d="M21 12H9" />
-                      </svg>
+                      <SignOutIcon size={18} />
                       Sign out
                     </button>
                   </>
@@ -167,6 +144,7 @@ export function NavBar() {
                     </div>
                     <div className="acct-divider" />
                     <Link className="acct-item" role="menuitem" to="/help" onClick={() => setMenuOpen(false)}>
+                      <HelpIcon size={18} />
                       Help &amp; FAQ
                     </Link>
                   </>
