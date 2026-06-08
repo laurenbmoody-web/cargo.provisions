@@ -48,8 +48,8 @@ function buildModel(custom: { id: string; cat: string; name: string; unit: strin
   return groups;
 }
 
-export function Catalogue({ onOpenOrder }: { onOpenOrder: () => void }) {
-  const { customItems, lines, count, isDbMode } = useOrder();
+export function Catalogue() {
+  const { customItems, lines, isDbMode } = useOrder();
   const { user } = useAuth();
   const toast = useToast();
 
@@ -139,11 +139,6 @@ export function Catalogue({ onOpenOrder }: { onOpenOrder: () => void }) {
     <>
       <div className="toolbar">
         <div className="wrap">
-          <div className="toolrow">
-            <button className="orderBtn" onClick={onOpenOrder} aria-label="open order">
-              Order <span className={`count${count === 0 ? ' zero' : ''}`}>{count}</span>
-            </button>
-          </div>
           <div className="chips">
             {model.map((g) => (
               <button key={g.group} className="chip" onClick={() => scrollToGroup(g.group)}>

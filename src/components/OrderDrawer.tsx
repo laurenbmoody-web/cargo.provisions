@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { DATA } from '../data/catalogue';
 import { useOrder } from '../lib/order';
+import { useOrderDrawer, useSignIn } from '../lib/ui';
 import { useToast } from './Toast';
 
 interface OrderRow {
@@ -15,17 +16,17 @@ interface OrderGroup {
   items: OrderRow[];
 }
 
-export function OrderDrawer({
-  open,
-  onClose,
-  onSignIn,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onSignIn: () => void;
-}) {
+export function OrderDrawer() {
   const { lines, notes, count, removeLine, clearOrder, isDbMode, saveStatus } = useOrder();
+  const { drawerOpen: open, closeDrawer } = useOrderDrawer();
+  const { openSignIn } = useSignIn();
   const toast = useToast();
+
+  const onClose = closeDrawer;
+  const onSignIn = () => {
+    closeDrawer();
+    openSignIn();
+  };
 
   // Group active lines by category in catalogue order.
   const grouped: OrderGroup[] = useMemo(() => {

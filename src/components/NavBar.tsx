@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
-import { useSignIn, useSearch } from '../lib/ui';
+import { useOrder } from '../lib/order';
+import { useSignIn, useSearch, useOrderDrawer } from '../lib/ui';
 
 /* Modern, consistent line icons (1.75 stroke, rounded). */
 const HistoryIcon = ({ size = 21 }: { size?: number }) => (
@@ -31,11 +32,24 @@ const SignOutIcon = ({ size = 18 }: { size?: number }) => (
     <path d="M21 12H9" />
   </svg>
 );
+// lucide clipboard-list — an order list, not a checkout cart
+const ClipboardListIcon = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    <path d="M12 11h4" />
+    <path d="M12 16h4" />
+    <path d="M8 11h.01" />
+    <path d="M8 16h.01" />
+  </svg>
+);
 
 export function NavBar() {
   const { user, configured, signOut } = useAuth();
   const { openSignIn } = useSignIn();
   const { query, setQuery } = useSearch();
+  const { openDrawer } = useOrderDrawer();
+  const { count } = useOrder();
   const navigate = useNavigate();
   const location = useLocation();
   const onCatalogue = location.pathname === '/';
@@ -90,6 +104,17 @@ export function NavBar() {
         )}
 
         <div className="nav-actions">
+          {/* Order list (opens the order drawer) */}
+          <button
+            className="order-pill"
+            aria-label={`View order (${count} item${count === 1 ? '' : 's'})`}
+            onClick={openDrawer}
+          >
+            <ClipboardListIcon size={18} />
+            <span className="order-pill-label">Order</span>
+            {count > 0 && <span className="order-count">{count}</span>}
+          </button>
+
           {/* Order history */}
           <button
             className="icon-btn"
