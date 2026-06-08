@@ -5,6 +5,7 @@ import { useAuth } from '../lib/auth';
 import { useOrder } from '../lib/order';
 import { useToast } from '../components/Toast';
 import { Footer } from '../components/Footer';
+import { Spinner } from '../components/Spinner';
 import { ROLES, VESSEL_TYPES, USAGE_TYPES } from '../lib/constants';
 
 interface ProfileRow {
@@ -283,8 +284,9 @@ export function Account() {
 
   if (loading || !profile) {
     return (
-      <div className="account">
-        <p style={{ color: 'var(--ink-soft)' }}>Loading…</p>
+      <div className="loading-center">
+        <Spinner size={48} />
+        <p>Loading your account…</p>
       </div>
     );
   }

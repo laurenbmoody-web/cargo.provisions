@@ -120,6 +120,9 @@ header.top h1 em {
   height: 28px;
   width: auto;
   display: block;
+  /* The SVG has ~6.4% leading transparent padding; pull it left so the
+     artwork edge (the swirl) lines up with the content/text edge below. */
+  margin-left: -12px;
 }
 .brand-sub {
   font-family: 'Plus Jakarta Sans', sans-serif;
@@ -358,6 +361,7 @@ header.top h1 em {
   }
   .brand-logo {
     height: 22px;
+    margin-left: -9px;
   }
   .brand-sub {
     display: none;
@@ -1412,6 +1416,20 @@ footer.site .cargo {
   to {
     transform: rotate(360deg);
   }
+}
+/* Brand loading spinner — the Cargo mark rotating */
+.brand-spinner {
+  display: block;
+  animation: spin 1.1s linear infinite;
+}
+.loading-center {
+  display: grid;
+  place-items: center;
+  gap: 14px;
+  min-height: 60vh;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 14px;
 }
 
 @media (max-width: 640px) {
