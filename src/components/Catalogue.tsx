@@ -97,6 +97,31 @@ export function Catalogue() {
     };
   }, [q, anyResults, isDbMode, user]);
 
+  // Section ("Jump to") list with item counts per group.
+  const groupCounts = useMemo(
+    () =>
+      model.map((g) => ({
+        group: g.group,
+        count: g.cats.reduce((sum, c) => sum + c.items.length, 0),
+      })),
+    [model],
+  );
+  const [jumpOpen, setJumpOpen] = useState(false);
+  const jumpRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!jumpOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (jumpRef.current && !jumpRef.current.contains(e.target as Node)) setJumpOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setJumpOpen(false);
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [jumpOpen]);
+
   const toggleCat = (name: string) =>
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -139,30 +164,60 @@ export function Catalogue() {
     <>
       <div className="toolbar">
         <div className="wrap">
-          <div className="chips">
-            {model.map((g) => (
-              <button key={g.group} className="chip" onClick={() => scrollToGroup(g.group)}>
-                {g.group}
+          <div className="filterbar">
+            <span className="cuisine-label-fixed">Cuisine</span>
+            {cuisine !== 'all' && (
+              <button className="filtered-chip" onClick={() => setCuisine('all')} title="Clear filter">
+                Filtered: {CUISINE_LABEL[cuisine] ?? cuisine}
+                <span className="fx" aria-hidden="true">✕</span>
               </button>
-            ))}
-          </div>
-          <div className="chips cuisinebar">
-            <span className="chip cuisine-label">Cuisine</span>
-            <button
-              className={`chip${cuisine === 'all' ? ' cu-active' : ''}`}
-              onClick={() => setCuisine('all')}
-            >
-              All
-            </button>
-            {CUISINES.map(([code, label]) => (
+            )}
+            <div className="cuisine-scroll">
               <button
-                key={code}
-                className={`chip${cuisine === code ? ' cu-active' : ''}`}
-                onClick={() => setCuisine(code)}
+                className={`chip${cuisine === 'all' ? ' cu-active' : ''}`}
+                onClick={() => setCuisine('all')}
               >
-                {label}
+                All
               </button>
-            ))}
+              {CUISINES.map(([code, label]) => (
+                <button
+                  key={code}
+                  className={`chip${cuisine === code ? ' cu-active' : ''}`}
+                  onClick={() => setCuisine(code)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="jumpto" ref={jumpRef}>
+              <span className="vdivider" />
+              <button
+                className="jumpto-btn"
+                aria-haspopup="menu"
+                aria-expanded={jumpOpen}
+                onClick={() => setJumpOpen((o) => !o)}
+              >
+                Jump to <span className="caret-sm" aria-hidden="true">▾</span>
+              </button>
+              {jumpOpen && (
+                <div className="jumpto-menu" role="menu">
+                  {groupCounts.map(({ group, count }) => (
+                    <button
+                      key={group}
+                      className="jumpto-item"
+                      role="menuitem"
+                      onClick={() => {
+                        scrollToGroup(group);
+                        setJumpOpen(false);
+                      }}
+                    >
+                      <span>{group}</span>
+                      <span className="jumpto-count">{count}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
