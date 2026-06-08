@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
-import { useSignIn } from '../lib/ui';
+import { useSignIn, useSearch } from '../lib/ui';
 
 /* Modern, consistent line icons (1.75 stroke, rounded). */
 const HistoryIcon = ({ size = 21 }: { size?: number }) => (
@@ -35,7 +35,10 @@ const SignOutIcon = ({ size = 18 }: { size?: number }) => (
 export function NavBar() {
   const { user, configured, signOut } = useAuth();
   const { openSignIn } = useSignIn();
+  const { query, setQuery } = useSearch();
   const navigate = useNavigate();
+  const location = useLocation();
+  const onCatalogue = location.pathname === '/';
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -68,6 +71,23 @@ export function NavBar() {
           <img className="brand-logo" src="/Centered_Logo.svg" alt="Cargo" />
           <span className="brand-sub">Provisions</span>
         </Link>
+
+        {onCatalogue && (
+          <div className="nav-search">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            <input
+              type="search"
+              placeholder="Search every item…"
+              autoComplete="off"
+              aria-label="Search the catalogue"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+        )}
 
         <div className="nav-actions">
           {/* Order history */}

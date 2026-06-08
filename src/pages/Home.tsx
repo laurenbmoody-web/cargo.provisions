@@ -40,13 +40,11 @@ export function Home() {
     <>
       <header className="top">
         <div className="wrap">
-          <div className="eyebrow">Cargo Provisions · Galley Order</div>
           <h1>
             What are we <em>ordering</em>?
           </h1>
           <div className="sub">
-            Tap through, set the pack size and quantity, and send the order off. Everything saves as
-            you go — build it up over a few days if you need to.
+            The simple provisioning list for superyacht chefs — build your order and send it off.
           </div>
         </div>
       </header>
