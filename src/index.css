@@ -519,6 +519,142 @@ header.top h1 em {
   color: var(--ink-soft);
 }
 
+/* ---------- Filter bar (single row: cuisine pills + Jump to) ---------- */
+.filterbar {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 0;
+}
+.cuisine-label-fixed {
+  flex: none;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+.filtered-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--navy);
+  color: #fff;
+  border: 1px solid var(--navy);
+  border-radius: 30px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.filtered-chip:hover {
+  background: var(--navy-deep);
+}
+.filtered-chip .fx {
+  font-size: 13px;
+  opacity: 0.85;
+}
+.cuisine-scroll {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* soft fade at the right edge to hint at overflow */
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent 100%);
+}
+.cuisine-scroll::-webkit-scrollbar {
+  display: none;
+}
+.cuisine-scroll .chip {
+  flex: none;
+}
+.jumpto {
+  flex: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.vdivider {
+  width: 1px;
+  height: 24px;
+  background: var(--line);
+  flex: none;
+}
+.jumpto-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--navy);
+  font: inherit;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.jumpto-btn:hover {
+  border-color: var(--navy);
+}
+.caret-sm {
+  font-size: 10px;
+  opacity: 0.7;
+}
+.jumpto-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 230px;
+  max-height: 64vh;
+  overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 14px 38px rgba(27, 30, 61, 0.18);
+  padding: 6px;
+  z-index: 100;
+}
+.jumpto-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 11px;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--navy);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.jumpto-item:hover {
+  background: var(--paper);
+}
+.jumpto-count {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--rust);
+  background: var(--rust-soft);
+  border-radius: 20px;
+  padding: 1px 8px;
+}
+
 /* ---------- Categories ---------- */
 main.catalogue {
   padding-top: 18px;
@@ -1435,6 +1571,19 @@ footer.site .cargo {
 @media (max-width: 640px) {
   body {
     padding-bottom: 140px;
+  }
+  /* Filter bar: pills scroll, Jump-to stays pinned right */
+  .cuisine-label-fixed {
+    display: none;
+  }
+  .filterbar {
+    gap: 8px;
+  }
+  .jumpto {
+    gap: 8px;
+  }
+  .jumpto-btn {
+    padding: 8px 11px;
   }
   .row-main {
     grid-template-columns: 1fr 92px 104px;
