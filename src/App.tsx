@@ -4,6 +4,7 @@ import { OrderProvider } from './lib/order';
 import { SignInProvider } from './lib/ui';
 import { ToastProvider } from './components/Toast';
 import { NavBar } from './components/NavBar';
+import { OrderDrawer } from './components/OrderDrawer';
 import { Home } from './pages/Home';
 import { AuthCallback } from './pages/AuthCallback';
 import { Account } from './pages/Account';
@@ -28,6 +29,7 @@ export default function App() {
                 <Route path="/help" element={<Help />} />
                 <Route path="*" element={<Home />} />
               </Routes>
+              <OrderDrawer />
             </SignInProvider>
           </ToastProvider>
         </OrderProvider>
