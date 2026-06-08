@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './lib/auth';
 import { OrderProvider } from './lib/order';
+import { SignInProvider } from './lib/ui';
 import { ToastProvider } from './components/Toast';
+import { NavBar } from './components/NavBar';
 import { Home } from './pages/Home';
 import { AuthCallback } from './pages/AuthCallback';
 import { Account } from './pages/Account';
@@ -15,15 +17,18 @@ export default function App() {
       <AuthProvider>
         <OrderProvider>
           <ToastProvider>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route path="/account" element={<Account />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/help" element={<Help />} />
-              <Route path="*" element={<Home />} />
-            </Routes>
+            <SignInProvider>
+              <NavBar />
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/account" element={<Account />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/help" element={<Help />} />
+                <Route path="*" element={<Home />} />
+              </Routes>
+            </SignInProvider>
           </ToastProvider>
         </OrderProvider>
       </AuthProvider>

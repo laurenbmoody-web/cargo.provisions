@@ -1,20 +1,19 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Catalogue } from '../components/Catalogue';
 import { OrderDrawer } from '../components/OrderDrawer';
-import { SignInModal } from '../components/SignInModal';
 import { Onboarding } from '../components/Onboarding';
 import { Footer } from '../components/Footer';
 import { StorageNotice } from '../components/StorageNotice';
 import { useAuth } from '../lib/auth';
 import { useOrder } from '../lib/order';
+import { useSignIn } from '../lib/ui';
 import { supabase } from '../lib/supabase';
 
 export function Home() {
-  const { user, configured, signOut } = useAuth();
+  const { user, configured } = useAuth();
   const { count } = useOrder();
+  const { openSignIn } = useSignIn();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [signInOpen, setSignInOpen] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   // First-time onboarding: show if no profile row yet.
@@ -49,17 +48,6 @@ export function Home() {
             Tap through, set the pack size and quantity, and send the order off. Everything saves as
             you go — build it up over a few days if you need to.
           </div>
-          <div className="headlinks">
-            {configured && user ? (
-              <>
-                <Link to="/account">My orders</Link>
-                <button onClick={signOut}>Sign out</button>
-              </>
-            ) : (
-              configured && <button onClick={() => setSignInOpen(true)}>Save / Sign in</button>
-            )}
-            <Link to="/help">Help</Link>
-          </div>
         </div>
       </header>
 
@@ -72,7 +60,7 @@ export function Home() {
             <span className="grow">
               Building an order? Sign in to save it and pick it up on any device.
             </span>
-            <button onClick={() => setSignInOpen(true)}>Save order</button>
+            <button onClick={openSignIn}>Save order</button>
           </div>
         </div>
       )}
@@ -94,11 +82,10 @@ export function Home() {
         onClose={() => setDrawerOpen(false)}
         onSignIn={() => {
           setDrawerOpen(false);
-          setSignInOpen(true);
+          openSignIn();
         }}
       />
 
-      <SignInModal open={signInOpen} onClose={() => setSignInOpen(false)} />
       {needsOnboarding && <Onboarding onDone={() => setNeedsOnboarding(false)} />}
 
       <StorageNotice />

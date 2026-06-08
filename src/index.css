@@ -98,6 +98,170 @@ header.top h1 em {
   color: #fff;
 }
 
+/* ---------- Top nav bar ---------- */
+.navbar {
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+}
+.navbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 62px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.brand-mark {
+  flex: none;
+}
+.brand-word {
+  font-family: 'DM Serif Display', serif;
+  font-size: 25px;
+  color: var(--navy);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.brand-sub {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--rust);
+  border-left: 1px solid var(--line);
+  padding-left: 9px;
+}
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.icon-btn,
+.acct-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.15s, background 0.15s;
+}
+.icon-btn:hover,
+.acct-btn:hover {
+  border-color: var(--navy);
+  background: var(--paper);
+}
+.acct-btn.signed-in {
+  border-color: var(--navy);
+}
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+}
+.acct {
+  position: relative;
+}
+.acct-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 232px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 32px rgba(27, 30, 61, 0.16);
+  padding: 6px;
+  z-index: 100;
+}
+.acct-head {
+  padding: 8px 10px 10px;
+}
+.acct-head-label {
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+.acct-head-email {
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 600;
+  word-break: break-all;
+}
+.acct-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 10px;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-decoration: none;
+}
+.acct-item svg {
+  color: var(--ink-soft);
+  flex: none;
+}
+.acct-item:hover {
+  background: var(--paper);
+}
+.acct-item.primary {
+  background: var(--navy);
+  color: #fff;
+  font-weight: 600;
+  justify-content: center;
+}
+.acct-item.primary:hover {
+  background: var(--navy-deep);
+}
+.acct-note {
+  font-size: 12px;
+  color: var(--ink-soft);
+  padding: 8px 10px;
+  line-height: 1.4;
+}
+.acct-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 6px 4px;
+}
+
+@media (max-width: 640px) {
+  .brand-word {
+    font-size: 21px;
+  }
+  .brand-sub {
+    display: none;
+  }
+}
+
 /* ---------- Toolbar (sticky) ---------- */
 .toolbar {
   position: sticky;
