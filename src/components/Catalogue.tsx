@@ -9,6 +9,7 @@ import {
 } from '../data/catalogue';
 import { useOrder } from '../lib/order';
 import { useAuth } from '../lib/auth';
+import { useSearch } from '../lib/ui';
 import { logSearchMiss } from '../lib/analytics';
 import { useToast } from './Toast';
 import { ItemRow, type CatItem } from './ItemRow';
@@ -58,7 +59,7 @@ export function Catalogue({ onOpenOrder }: { onOpenOrder: () => void }) {
     [model],
   );
 
-  const [query, setQuery] = useState('');
+  const { query, setQuery } = useSearch();
   const [cuisine, setCuisine] = useState('all');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -139,19 +140,6 @@ export function Catalogue({ onOpenOrder }: { onOpenOrder: () => void }) {
       <div className="toolbar">
         <div className="wrap">
           <div className="toolrow">
-            <div className="search">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="7" />
-                <path d="m20 20-3.5-3.5" />
-              </svg>
-              <input
-                type="search"
-                placeholder="Search every item…"
-                autoComplete="off"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-            </div>
             <button className="orderBtn" onClick={onOpenOrder} aria-label="open order">
               Order <span className={`count${count === 0 ? ' zero' : ''}`}>{count}</span>
             </button>
