@@ -22,13 +22,16 @@ export function Home() {
       setNeedsOnboarding(false);
       return;
     }
+    // Show onboarding until the user has accepted terms (captures consent).
+    // Keyed on terms_accepted_at, not mere row existence, so it still works
+    // even if a DB trigger pre-creates a bare profile row.
     supabase
       .from('chef_profiles')
-      .select('id')
+      .select('terms_accepted_at')
       .eq('id', user.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (!cancelled) setNeedsOnboarding(!data);
+        if (!cancelled) setNeedsOnboarding(!data || !data.terms_accepted_at);
       });
     return () => {
       cancelled = true;
