@@ -266,6 +266,31 @@ header.top h1 em {
 .acct {
   position: relative;
 }
+/* Logged-out: direct 'Sign in' outline pill */
+.signin-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--navy);
+  border-radius: 30px;
+  background: transparent;
+  color: var(--navy);
+  font: inherit;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
+}
+.signin-pill:hover {
+  background: var(--navy);
+  color: #fff;
+}
+.signin-pill:active {
+  transform: translateY(1px);
+}
 .acct-menu {
   position: absolute;
   top: calc(100% + 10px);
@@ -386,6 +411,10 @@ header.top h1 em {
   }
   .order-pill-label {
     display: none;
+  }
+  .signin-pill {
+    height: 38px;
+    padding: 0 13px;
   }
 }
 
