@@ -42,6 +42,12 @@ type SaveStatus = 'idle' | 'saving' | 'saved';
 
 const DEFAULT_TITLE = 'Your list';
 
+/** Fired whenever a list's title/items change, so an open /lists page can refresh. */
+export const LISTS_UPDATED_EVENT = 'cargo:lists-updated';
+function notifyListsUpdated() {
+  window.dispatchEvent(new Event(LISTS_UPDATED_EVENT));
+}
+
 interface OrderContextValue {
   ready: boolean;
   lines: Record<string, OrderLine>;
@@ -327,6 +333,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       }
       // Touch the order so updated_at reflects activity.
       await supabase.from('chef_orders').update({ status: 'open' }).eq('id', orderId);
+      notifyListsUpdated(); // refresh an open /lists page (counts, title on create)
       setSaveStatus('saved');
       window.setTimeout(() => setSaveStatus('idle'), 1500);
     } catch (e) {
@@ -528,7 +535,11 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       setTitleState(v);
       if (isDbMode) {
         if (orderIdRef.current) {
-          void supabase.from('chef_orders').update({ title: v }).eq('id', orderIdRef.current);
+          void supabase
+            .from('chef_orders')
+            .update({ title: v })
+            .eq('id', orderIdRef.current)
+            .then(() => notifyListsUpdated());
         }
         // if no order yet, flushDb applies the title when it creates one
       } else {

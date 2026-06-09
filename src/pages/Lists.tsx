@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
-import { useOrder } from '../lib/order';
+import { useOrder, LISTS_UPDATED_EVENT } from '../lib/order';
 import { useToast } from '../components/Toast';
 import { Footer } from '../components/Footer';
 import { Spinner } from '../components/Spinner';
@@ -142,6 +142,13 @@ export function Lists() {
 
   useEffect(() => {
     void load();
+  }, [load]);
+
+  // Refresh when a list changes elsewhere (e.g. renamed in the drawer/full page).
+  useEffect(() => {
+    const onUpdated = () => void load();
+    window.addEventListener(LISTS_UPDATED_EVENT, onUpdated);
+    return () => window.removeEventListener(LISTS_UPDATED_EVENT, onUpdated);
   }, [load]);
 
   const renameList = async (o: ListSummary) => {
