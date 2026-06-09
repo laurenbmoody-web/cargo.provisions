@@ -40,6 +40,8 @@ export interface ItemRef {
 
 type SaveStatus = 'idle' | 'saving' | 'saved';
 
+const DEFAULT_TITLE = 'Your list';
+
 interface OrderContextValue {
   ready: boolean;
   lines: Record<string, OrderLine>;
@@ -48,6 +50,9 @@ interface OrderContextValue {
   count: number;
   saveStatus: SaveStatus;
   isDbMode: boolean;
+  orderId: string | null; // the active (open) list's id, when signed in
+  title: string; // active list name (default 'Your list'), inline-editable
+  setTitle: (title: string) => void;
   setQty: (item: ItemRef, qty: number, unit: string) => void;
   setUnit: (id: string, unit: string) => void;
   setNote: (id: string, note: string) => void;
@@ -65,6 +70,24 @@ const OrderContext = createContext<OrderContextValue | null>(null);
 const KEY_ORDER = 'provisions:order';
 const KEY_CUSTOM = 'provisions:custom';
 const KEY_NOTES = 'provisions:notes';
+const KEY_TITLE = 'provisions:title';
+
+function loadLocalTitle(): string {
+  if (!HAS_LS) return DEFAULT_TITLE;
+  try {
+    return window.localStorage.getItem(KEY_TITLE) || DEFAULT_TITLE;
+  } catch {
+    return DEFAULT_TITLE;
+  }
+}
+function saveLocalTitle(t: string) {
+  if (!HAS_LS) return;
+  try {
+    window.localStorage.setItem(KEY_TITLE, t);
+  } catch {
+    /* ignore */
+  }
+}
 
 function lsAvailable(): boolean {
   try {
@@ -116,6 +139,7 @@ function clearLocal() {
     window.localStorage.removeItem(KEY_ORDER);
     window.localStorage.removeItem(KEY_CUSTOM);
     window.localStorage.removeItem(KEY_NOTES);
+    window.localStorage.removeItem(KEY_TITLE);
   } catch {
     /* ignore */
   }
@@ -131,16 +155,16 @@ function isLocalEmpty(s: LocalState): boolean {
 /* ============================================================
    Supabase persistence helpers
    ============================================================ */
-async function dbGetOpenOrderId(userId: string): Promise<string | null> {
+async function dbGetOpenOrder(userId: string): Promise<{ id: string; title: string } | null> {
   const { data } = await supabase
     .from('chef_orders')
-    .select('id')
+    .select('id,title')
     .eq('user_id', userId)
     .eq('status', 'open')
     .order('updated_at', { ascending: false })
     .limit(1)
     .maybeSingle();
-  return data?.id ?? null;
+  return data ? { id: data.id as string, title: (data.title as string) || DEFAULT_TITLE } : null;
 }
 
 async function dbCreateOpenOrder(userId: string): Promise<string> {
@@ -221,6 +245,13 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
 
   const orderIdRef = useRef<string | null>(null);
+  const [orderId, setOrderIdState] = useState<string | null>(null);
+  const setOrderId = useCallback((v: string | null) => {
+    orderIdRef.current = v;
+    setOrderIdState(v);
+  }, []);
+  const [title, setTitleState] = useState<string>(DEFAULT_TITLE);
+  const titleRef = useRef<string>(DEFAULT_TITLE);
   const [reloadCounter, setReloadCounter] = useState(0);
   const reload = useCallback(() => setReloadCounter((n) => n + 1), []);
   const isDbMode = !!user;
@@ -259,9 +290,18 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     setSaveStatus('saving');
     try {
       if (!orderIdRef.current) {
-        orderIdRef.current = await dbCreateOpenOrder(user.id);
+        const newId = await dbCreateOpenOrder(user.id);
+        setOrderId(newId);
+        // carry the (possibly renamed) title onto the freshly created list
+        if (titleRef.current && titleRef.current !== DEFAULT_TITLE) {
+          await supabase.from('chef_orders').update({ title: titleRef.current }).eq('id', newId);
+        }
       }
       const orderId = orderIdRef.current;
+      if (!orderId) {
+        setSaveStatus('idle');
+        return;
+      }
       const upserts: ReturnType<typeof rowFor>[] = [];
       const deletes: string[] = [];
       for (const [key, op] of ops) {
@@ -320,21 +360,32 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       setReady(false);
       if (!user) {
         // Anonymous: load from localStorage.
-        orderIdRef.current = null;
+        setOrderId(null);
         const s = loadLocal();
+        const t = loadLocalTitle();
         if (cancelled) return;
         setLines(s.lines);
         setNotes(s.notes);
         setCustomItems(s.customItems);
+        titleRef.current = t;
+        setTitleState(t);
         setReady(true);
         return;
       }
       // Signed-in: load DB open order, migrating any local order first.
       try {
-        let orderId = await dbGetOpenOrderId(user.id);
+        const localTitle = loadLocalTitle();
+        const open = await dbGetOpenOrder(user.id);
+        let orderId = open?.id ?? null;
+        let openTitle = open?.title ?? DEFAULT_TITLE;
         const local = loadLocal();
         if (!isLocalEmpty(local)) {
           if (!orderId) orderId = await dbCreateOpenOrder(user.id);
+          // carry a name chosen while anonymous onto the migrated list
+          if (localTitle && localTitle !== DEFAULT_TITLE) {
+            await supabase.from('chef_orders').update({ title: localTitle }).eq('id', orderId);
+            openTitle = localTitle;
+          }
           // Local wins on conflict.
           const rows: ReturnType<typeof rowFor>[] = [];
           for (const [key, line] of Object.entries(local.lines)) {
@@ -363,7 +414,9 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         }
         const state = orderId ? await dbLoadItems(orderId) : { lines: {}, customItems: [], notes: {} };
         if (cancelled) return;
-        orderIdRef.current = orderId;
+        setOrderId(orderId);
+        titleRef.current = openTitle;
+        setTitleState(openTitle);
         setLines(state.lines);
         setNotes(state.notes);
         setCustomItems(state.customItems);
@@ -468,6 +521,23 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     [persistKey],
   );
 
+  const setTitle = useCallback(
+    (t: string) => {
+      const v = t.trim() || DEFAULT_TITLE;
+      titleRef.current = v;
+      setTitleState(v);
+      if (isDbMode) {
+        if (orderIdRef.current) {
+          void supabase.from('chef_orders').update({ title: v }).eq('id', orderIdRef.current);
+        }
+        // if no order yet, flushDb applies the title when it creates one
+      } else {
+        saveLocalTitle(v);
+      }
+    },
+    [isDbMode],
+  );
+
   const clearOrder = useCallback(() => {
     const keys = Object.keys(linesRef.current);
     setLines({});
@@ -491,6 +561,9 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     count,
     saveStatus,
     isDbMode,
+    orderId,
+    title,
+    setTitle,
     setQty,
     setUnit,
     setNote,

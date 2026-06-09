@@ -1,155 +1,69 @@
 import { useMemo } from 'react';
-import { DATA } from '../data/catalogue';
-import { useOrder } from '../lib/order';
+import { useNavigate } from 'react-router-dom';
+import { useOrder, type ItemRef } from '../lib/order';
 import { useOrderDrawer, useSignIn } from '../lib/ui';
-import { useToast } from './Toast';
-
-interface OrderRow {
-  id: string;
-  name: string;
-  unit: string;
-  qty: number;
-  note: string;
-}
-interface OrderGroup {
-  cat: string;
-  items: OrderRow[];
-}
+import { groupActive } from '../lib/activeList';
+import { useActiveListActions } from '../lib/useActiveListActions';
+import { ListItemRow } from './ListItemRow';
 
 export function OrderDrawer() {
-  const { lines, notes, count, removeLine, clearOrder, isDbMode, saveStatus } = useOrder();
+  const { lines, notes, count, title, setTitle, orderId, isDbMode, saveStatus, setQty, setUnit, setNote, removeLine } =
+    useOrder();
   const { drawerOpen: open, closeDrawer } = useOrderDrawer();
   const { openSignIn } = useSignIn();
-  const toast = useToast();
+  const { doCopy, doCsv, doPrint, doClear } = useActiveListActions();
+  const navigate = useNavigate();
 
-  const onClose = closeDrawer;
-  const onSignIn = () => {
-    closeDrawer();
-    openSignIn();
-  };
-
-  // Group active lines by category in catalogue order.
-  const grouped: OrderGroup[] = useMemo(() => {
-    const catOrder: string[] = [];
-    for (const [, cats] of DATA) for (const [cat] of cats) catOrder.push(cat);
-    // Include any custom categories not in DATA at the end (defensive).
-    const seen = new Set(catOrder);
-    for (const l of Object.values(lines)) if (l.cat && !seen.has(l.cat)) {
-      catOrder.push(l.cat);
-      seen.add(l.cat);
-    }
-    const out: OrderGroup[] = [];
-    for (const cat of catOrder) {
-      const items = Object.entries(lines)
-        .filter(([, l]) => l.cat === cat && l.qty > 0)
-        .map(([id, l]) => ({ id, name: l.name, unit: l.unit, qty: l.qty, note: (notes[id] ?? '').trim() }));
-      if (items.length) out.push({ cat, items });
-    }
-    return out;
-  }, [lines, notes]);
-
-  const orderText = () => {
-    const date = new Date().toLocaleDateString('en-GB', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-    let t = `PROVISIONS LIST — ${date}\n`;
-    for (const g of grouped) {
-      t += `\n${g.cat.toUpperCase()}\n`;
-      for (const it of g.items) {
-        t += `• ${it.qty} × ${it.name}${it.unit ? ` (${it.unit})` : ''}${it.note ? ` — ${it.note}` : ''}\n`;
-      }
-    }
-    t += `\n${count} line items total.`;
-    return t;
-  };
-
-  const doCopy = async () => {
-    if (!count) return toast('List is empty');
-    const t = orderText();
-    try {
-      await navigator.clipboard.writeText(t);
-      toast('Copied — paste into WhatsApp or email');
-    } catch {
-      const ta = document.createElement('textarea');
-      ta.value = t;
-      document.body.appendChild(ta);
-      ta.select();
-      try {
-        document.execCommand('copy');
-        toast('Copied to clipboard');
-      } catch {
-        toast('Copy failed — long-press to select');
-      }
-      ta.remove();
-    }
-  };
-
-  const doCsv = () => {
-    if (!count) return toast('List is empty');
-    let csv = 'Category,Item,Quantity,Unit,Note\n';
-    for (const g of grouped) {
-      for (const it of g.items) {
-        csv += `"${g.cat}","${it.name}",${it.qty},"${it.unit || ''}","${(it.note || '').replace(/"/g, '""')}"\n`;
-      }
-    }
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `provisions-list-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    toast('CSV downloaded');
-  };
-
-  const doPrint = () => {
-    if (!count) return toast('List is empty');
-    const pa = document.getElementById('printArea');
-    if (!pa) return;
-    const date = new Date().toLocaleDateString('en-GB', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-    let h = `<h2>Provisions List</h2><div class="pmeta">${date} · ${count} line items</div>`;
-    for (const g of grouped) {
-      h += `<h3>${g.cat}</h3>`;
-      for (const it of g.items) {
-        h += `<div class="pr"><span>${it.qty} × ${it.name}${it.note ? ` <em style="color:#666">— ${it.note}</em>` : ''}</span><span>${it.unit || ''}</span></div>`;
-      }
-    }
-    pa.innerHTML = h;
-    window.print();
-  };
-
-  const doClear = () => {
-    if (!count) return toast('Already empty');
-    if (!window.confirm('Clear the whole list?')) return;
-    clearOrder();
-    toast('List cleared');
-  };
+  const grouped = useMemo(() => groupActive(lines, notes), [lines, notes]);
 
   const dmeta = count
     ? `${count} item${count > 1 ? 's' : ''} · ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
     : 'Nothing added yet';
 
+  const refFor = (it: { id: string; name: string; cat: string; cuisine?: string; is_custom?: boolean }): ItemRef => ({
+    id: it.id,
+    name: it.name,
+    cat: it.cat,
+    cuisine: it.cuisine,
+    is_custom: it.is_custom,
+  });
+
   return (
     <>
-      <div className={`scrim${open ? ' open' : ''}`} onClick={onClose} />
+      <div className={`scrim${open ? ' open' : ''}`} onClick={closeDrawer} />
       <aside className={`drawer${open ? ' open' : ''}`} aria-hidden={!open}>
         <div className="drawer-head">
-          <div style={{ flex: 1 }}>
-            <h2>Your list</h2>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <input
+              className="drawer-title-input"
+              key={title}
+              defaultValue={title}
+              aria-label="List name"
+              onBlur={(e) => {
+                if (e.target.value.trim() !== title) setTitle(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+              }}
+            />
             <div className="dmeta">
               {dmeta}
               {isDbMode && saveStatus === 'saving' && ' · saving…'}
               {isDbMode && saveStatus === 'saved' && ' · saved ✓'}
             </div>
+            {orderId && (
+              <button
+                className="full-list-link"
+                onClick={() => {
+                  closeDrawer();
+                  navigate(`/lists/${orderId}`);
+                }}
+              >
+                Open full list →
+              </button>
+            )}
           </div>
-          <button className="x" onClick={onClose} aria-label="close">
+          <button className="x" onClick={closeDrawer} aria-label="close">
             ×
           </button>
         </div>
@@ -157,25 +71,25 @@ export function OrderDrawer() {
         <div className="drawer-body">
           {grouped.length === 0 ? (
             <div className="empty-order">
-              <span className="big">Empty so far</span>
-              Add items and they'll gather here, ready to send.
+              <span className="big">No items yet</span>
+              Tap items in the catalogue to build your list.
             </div>
           ) : (
             grouped.map((g) => (
               <div key={g.cat} className="o-cat">
                 <h3>{g.cat}</h3>
                 {g.items.map((it) => (
-                  <div key={it.id} className="o-row">
-                    <span className="oq">{it.qty}×</span>
-                    <span className="on">
-                      {it.name}
-                      {it.note && <span className="onote">{it.note}</span>}
-                    </span>
-                    <span className="ou">{it.unit || ''}</span>
-                    <button className="orm" aria-label="remove" onClick={() => removeLine(it.id)}>
-                      ×
-                    </button>
-                  </div>
+                  <ListItemRow
+                    key={it.id}
+                    name={it.name}
+                    unit={it.unit}
+                    qty={it.qty}
+                    note={it.note}
+                    onQty={(q) => setQty(refFor(it), q, it.unit)}
+                    onUnit={(u) => setUnit(it.id, u)}
+                    onNote={(n) => setNote(it.id, n)}
+                    onRemove={() => removeLine(it.id)}
+                  />
                 ))}
               </div>
             ))
@@ -183,12 +97,18 @@ export function OrderDrawer() {
         </div>
 
         <div className="drawer-foot">
+          {!isDbMode && (
+            <button
+              className="save-cta"
+              onClick={() => {
+                closeDrawer();
+                openSignIn();
+              }}
+            >
+              Sign in to save this list
+            </button>
+          )}
           <div className="actions">
-            {!isDbMode && (
-              <button className="save-cta" onClick={onSignIn}>
-                Sign in to save this list
-              </button>
-            )}
             <button className="primary" onClick={doCopy}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="9" y="9" width="11" height="11" rx="2" />
@@ -198,10 +118,10 @@ export function OrderDrawer() {
             </button>
             <button onClick={doCsv}>Export CSV</button>
             <button onClick={doPrint}>Print</button>
-            <button className="danger" style={{ gridColumn: '1 / -1' }} onClick={doClear}>
-              Clear list
-            </button>
           </div>
+          <button className="clear-link" onClick={doClear}>
+            Clear list
+          </button>
         </div>
       </aside>
     </>
