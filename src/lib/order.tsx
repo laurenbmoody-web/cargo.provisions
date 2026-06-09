@@ -182,16 +182,16 @@ async function dbGetActiveOrder(userId: string): Promise<{ id: string; title: st
       .select('id,title')
       .eq('user_id', userId)
       .eq('is_active', true)
-      .neq('status', 'sent')
+      .eq('status', 'open')
       .limit(1)
       .maybeSingle();
     if (data) return { id: data.id as string, title: (data.title as string) || DEFAULT_TITLE };
-    // none active yet → adopt most recent non-sent list and activate it
+    // none active yet → adopt most recent open list and activate it
     const { data: recent } = await supabase
       .from('chef_orders')
       .select('id,title')
       .eq('user_id', userId)
-      .neq('status', 'sent')
+      .eq('status', 'open')
       .order('updated_at', { ascending: false })
       .limit(1)
       .maybeSingle();
