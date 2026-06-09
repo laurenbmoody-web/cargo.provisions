@@ -510,6 +510,82 @@ header.top h1 em {
   }
 }
 
+/* ---------- Browser-style list tabs on the hero's bottom edge ---------- */
+.hero-tabs-wrap {
+  max-width: var(--maxw);
+  margin: 22px auto -22px; /* ride the very bottom edge of the hero */
+  padding: 0 16px;
+}
+.hero-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.hero-tabs::-webkit-scrollbar {
+  display: none;
+}
+.htab {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 10px 10px 0 0;
+  background: rgba(255, 255, 255, 0.16);
+  color: #f3efe8;
+  font: inherit;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.htab:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+.htab.active {
+  background: var(--paper);
+  color: var(--navy);
+  cursor: default;
+}
+.htab-name {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.htab-badge {
+  flex: none;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+.htab-badge.active {
+  background: var(--rust);
+  color: #fff;
+}
+.htab-add {
+  padding: 8px 13px;
+  font-size: 18px;
+  line-height: 1;
+}
+.htab-add.solo {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+}
+
 /* ---------- Toolbar (sticky) ---------- */
 .toolbar {
   position: sticky;

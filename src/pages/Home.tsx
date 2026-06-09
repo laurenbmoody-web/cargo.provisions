@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Catalogue } from '../components/Catalogue';
+import { ListTabs } from '../components/ListTabs';
 import { Onboarding } from '../components/Onboarding';
 import { Footer } from '../components/Footer';
 import { StorageNotice } from '../components/StorageNotice';
@@ -49,6 +50,7 @@ export function Home() {
             The simple provisioning list for superyacht chefs — build your list and send it off.
           </div>
         </div>
+        <ListTabs />
       </header>
 
       <Catalogue />

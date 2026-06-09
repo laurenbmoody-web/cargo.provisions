@@ -59,6 +59,8 @@ interface OrderContextValue {
   orderId: string | null; // the active (open) list's id, when signed in
   title: string; // active list name (default 'Your list'), inline-editable
   setTitle: (title: string) => void;
+  setActiveOrder: (id: string) => Promise<void>; // switch which list is active (tabs)
+  createNewActiveList: () => Promise<void>; // start a new list and make it active
   setQty: (item: ItemRef, qty: number, unit: string) => void;
   setUnit: (id: string, unit: string) => void;
   setNote: (id: string, note: string) => void;
@@ -161,7 +163,45 @@ function isLocalEmpty(s: LocalState): boolean {
 /* ============================================================
    Supabase persistence helpers
    ============================================================ */
-async function dbGetOpenOrder(userId: string): Promise<{ id: string; title: string } | null> {
+// Whether chef_orders.is_active exists yet (migration 0003). Until it's run we
+// fall back to the legacy single-'open'-list behaviour so nothing breaks.
+let activeCol: 'unknown' | 'yes' | 'no' = 'unknown';
+async function hasActiveCol(): Promise<boolean> {
+  if (activeCol === 'unknown') {
+    const { error } = await supabase.from('chef_orders').select('is_active').limit(1);
+    activeCol = error ? 'no' : 'yes';
+  }
+  return activeCol === 'yes';
+}
+
+/** The active (current tab) list, or the legacy single open list. */
+async function dbGetActiveOrder(userId: string): Promise<{ id: string; title: string } | null> {
+  if (await hasActiveCol()) {
+    const { data } = await supabase
+      .from('chef_orders')
+      .select('id,title')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .neq('status', 'sent')
+      .limit(1)
+      .maybeSingle();
+    if (data) return { id: data.id as string, title: (data.title as string) || DEFAULT_TITLE };
+    // none active yet → adopt most recent non-sent list and activate it
+    const { data: recent } = await supabase
+      .from('chef_orders')
+      .select('id,title')
+      .eq('user_id', userId)
+      .neq('status', 'sent')
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (recent) {
+      await dbActivate(userId, recent.id as string);
+      return { id: recent.id as string, title: (recent.title as string) || DEFAULT_TITLE };
+    }
+    return null;
+  }
+  // legacy: the single open list
   const { data } = await supabase
     .from('chef_orders')
     .select('id,title')
@@ -173,10 +213,29 @@ async function dbGetOpenOrder(userId: string): Promise<{ id: string; title: stri
   return data ? { id: data.id as string, title: (data.title as string) || DEFAULT_TITLE } : null;
 }
 
-async function dbCreateOpenOrder(userId: string): Promise<string> {
+/** Make `id` the active list (exactly one active per user). */
+async function dbActivate(userId: string, id: string): Promise<void> {
+  if (await hasActiveCol()) {
+    await supabase.from('chef_orders').update({ is_active: false }).eq('user_id', userId).eq('is_active', true);
+    await supabase.from('chef_orders').update({ is_active: true }).eq('id', id);
+  } else {
+    // legacy: single open list
+    await supabase.from('chef_orders').update({ status: 'saved' }).eq('user_id', userId).eq('status', 'open');
+    await supabase.from('chef_orders').update({ status: 'open' }).eq('id', id);
+  }
+}
+
+/** Create a new list and make it the active one; returns its id. */
+async function dbCreateActiveOrder(userId: string): Promise<string> {
+  const useActive = await hasActiveCol();
+  if (useActive) {
+    await supabase.from('chef_orders').update({ is_active: false }).eq('user_id', userId).eq('is_active', true);
+  } else {
+    await supabase.from('chef_orders').update({ status: 'saved' }).eq('user_id', userId).eq('status', 'open');
+  }
   const { data, error } = await supabase
     .from('chef_orders')
-    .insert({ user_id: userId, status: 'open' })
+    .insert({ user_id: userId, status: 'open', ...(useActive ? { is_active: true } : {}) })
     .select('id')
     .single();
   if (error) throw error;
@@ -296,7 +355,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     setSaveStatus('saving');
     try {
       if (!orderIdRef.current) {
-        const newId = await dbCreateOpenOrder(user.id);
+        const newId = await dbCreateActiveOrder(user.id);
         setOrderId(newId);
         // carry the (possibly renamed) title onto the freshly created list
         if (titleRef.current && titleRef.current !== DEFAULT_TITLE) {
@@ -382,12 +441,12 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       // Signed-in: load DB open order, migrating any local order first.
       try {
         const localTitle = loadLocalTitle();
-        const open = await dbGetOpenOrder(user.id);
+        const open = await dbGetActiveOrder(user.id);
         let orderId = open?.id ?? null;
         let openTitle = open?.title ?? DEFAULT_TITLE;
         const local = loadLocal();
         if (!isLocalEmpty(local)) {
-          if (!orderId) orderId = await dbCreateOpenOrder(user.id);
+          if (!orderId) orderId = await dbCreateActiveOrder(user.id);
           // carry a name chosen while anonymous onto the migrated list
           if (localTitle && localTitle !== DEFAULT_TITLE) {
             await supabase.from('chef_orders').update({ title: localTitle }).eq('id', orderId);
@@ -549,6 +608,23 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     [isDbMode],
   );
 
+  const setActiveOrder = useCallback(
+    async (id: string) => {
+      if (!user) return;
+      await flushDb(); // persist any pending edits to the current list first
+      await dbActivate(user.id, id);
+      reload();
+    },
+    [user, flushDb, reload],
+  );
+
+  const createNewActiveList = useCallback(async () => {
+    if (!user) return;
+    await flushDb();
+    await dbCreateActiveOrder(user.id);
+    reload();
+  }, [user, flushDb, reload]);
+
   const clearOrder = useCallback(() => {
     const keys = Object.keys(linesRef.current);
     setLines({});
@@ -575,6 +651,8 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     orderId,
     title,
     setTitle,
+    setActiveOrder,
+    createNewActiveList,
     setQty,
     setUnit,
     setNote,
