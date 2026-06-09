@@ -14,6 +14,7 @@ interface ListSummary {
   updated_at: string;
   itemCount: number;
   favorite: boolean;
+  active: boolean;
 }
 
 const MoreIcon = () => (
@@ -31,7 +32,7 @@ const StarIcon = ({ filled }: { filled: boolean }) => (
 
 export function Lists() {
   const { user, configured } = useAuth();
-  const { reload } = useOrder();
+  const { reload, setActiveOrder, createNewActiveList } = useOrder();
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -101,21 +102,30 @@ export function Lists() {
     if (!user) return;
     setLoading(true);
     let synced = true;
-    const primary = await supabase
+    // Try the fullest select; degrade gracefully if a column isn't migrated yet.
+    const a = await supabase
       .from('chef_orders')
-      .select('id,title,status,updated_at,is_favorite')
+      .select('id,title,status,updated_at,is_favorite,is_active')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false });
-    let data = primary.data as Array<Record<string, unknown>> | null;
-    if (primary.error) {
-      // is_favorite column not present yet → fall back to local favourites
-      synced = false;
-      const fb = await supabase
+    let data = a.data as Array<Record<string, unknown>> | null;
+    if (a.error) {
+      const b = await supabase
         .from('chef_orders')
-        .select('id,title,status,updated_at')
+        .select('id,title,status,updated_at,is_favorite')
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false });
-      data = fb.data as Array<Record<string, unknown>> | null;
+      if (b.error) {
+        synced = false;
+        const c = await supabase
+          .from('chef_orders')
+          .select('id,title,status,updated_at')
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false });
+        data = c.data as Array<Record<string, unknown>> | null;
+      } else {
+        data = b.data as Array<Record<string, unknown>> | null;
+      }
     }
     setFavSynced(synced);
     const rows = data ?? [];
@@ -132,6 +142,7 @@ export function Lists() {
           status: o.status as string,
           updated_at: o.updated_at as string,
           favorite: !!o.is_favorite,
+          active: !!o.is_active,
           itemCount: count ?? 0,
         } as ListSummary;
       }),
@@ -165,17 +176,17 @@ export function Lists() {
     setMenuId(null);
     await supabase.from('chef_orders').update({ status: 'sent' }).eq('id', o.id);
     await load();
-    if (o.status === 'open') reload(); // active list was sent → catalogue starts fresh
+    if (o.active) reload(); // active list was sent → catalogue re-adopts another
     toast('Marked as sent');
   };
 
   const makeActive = async (o: ListSummary) => {
     setMenuId(null);
-    if (!user) return;
-    await supabase.from('chef_orders').update({ status: 'saved' }).eq('user_id', user.id).eq('status', 'open');
-    await supabase.from('chef_orders').update({ status: 'open' }).eq('id', o.id);
-    await load();
-    reload();
+    // un-send if needed, then make it the active list
+    if (o.status === 'sent') {
+      await supabase.from('chef_orders').update({ status: 'open' }).eq('id', o.id);
+    }
+    await setActiveOrder(o.id);
     toast('List opened — find it on the catalogue');
     navigate('/');
   };
@@ -208,16 +219,13 @@ export function Lists() {
     if (!window.confirm(`Delete “${o.title}”? This can't be undone.`)) return;
     await supabase.from('chef_orders').delete().eq('id', o.id);
     await load();
-    if (o.status === 'open') reload();
+    if (o.active) reload();
     toast('List deleted');
   };
 
   const newList = async () => {
     if (!user) return;
-    await supabase.from('chef_orders').update({ status: 'saved' }).eq('user_id', user.id).eq('status', 'open');
-    await supabase.from('chef_orders').insert({ user_id: user.id, status: 'open' });
-    await load();
-    reload();
+    await createNewActiveList();
     toast('Started a new list');
     navigate('/');
   };
@@ -289,9 +297,14 @@ export function Lists() {
                   <StarIcon filled={fav} />
                 </button>
 
-                {o.status === 'open' && <span className="badge open">Open</span>}
+                {o.active && <span className="badge open">Active</span>}
                 {sent && <span className="badge sent">Sent</span>}
 
+                {!o.active && (
+                  <button className="btn" onClick={() => makeActive(o)}>
+                    Open
+                  </button>
+                )}
                 <button className="btn" onClick={() => renameList(o)}>
                   Rename
                 </button>
@@ -311,11 +324,7 @@ export function Lists() {
                       <button className="overflow-item" role="menuitem" onClick={() => duplicateList(o)}>
                         Duplicate
                       </button>
-                      {sent ? (
-                        <button className="overflow-item" role="menuitem" onClick={() => makeActive(o)}>
-                          Mark as open
-                        </button>
-                      ) : (
+                      {!sent && (
                         <button className="overflow-item" role="menuitem" onClick={() => markSent(o)}>
                           Mark as sent
                         </button>

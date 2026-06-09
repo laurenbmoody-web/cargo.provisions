@@ -91,7 +91,7 @@ export function ListView() {
               }}
               onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
             />
-            <span className="badge open">Open</span>
+            <span className="badge open">Active</span>
           </div>
 
           {grouped.length === 0 ? (
@@ -211,10 +211,11 @@ export function ListView() {
   };
 
   const openOnCatalogue = async () => {
-    if (!user) return;
-    await supabase.from('chef_orders').update({ status: 'saved' }).eq('user_id', user.id).eq('status', 'open');
-    await supabase.from('chef_orders').update({ status: 'open' }).eq('id', id!);
-    order.reload();
+    if (!user || !id) return;
+    if (meta.status === 'sent') {
+      await supabase.from('chef_orders').update({ status: 'open' }).eq('id', id);
+    }
+    await order.setActiveOrder(id);
     toast('List opened — find it on the catalogue');
     navigate('/');
   };
