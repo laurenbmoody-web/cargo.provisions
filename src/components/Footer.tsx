@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTour } from '../lib/tour';
 
 const InstagramIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -9,12 +10,16 @@ const InstagramIcon = () => (
 );
 
 export function Footer() {
+  const { startTour } = useTour();
   return (
     <footer className="site">
       <div className="wrap">
         <Link to="/privacy">Privacy</Link>
         <Link to="/terms">Terms</Link>
         <Link to="/help">Help</Link>
+        <button className="footer-tips" onClick={startTour}>
+          Tips
+        </button>
         <a
           className="ig"
           href="https://www.instagram.com/cargo_technologyltd"
