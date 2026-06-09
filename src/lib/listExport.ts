@@ -14,6 +14,27 @@ export interface ExportGroup {
 
 export const SIGNATURE = '— Sent via Cargo Provisions';
 
+export interface Galley {
+  vessel?: string | null;
+  name?: string | null;
+  role?: string | null;
+}
+
+/**
+ * Standard galley header line for exports: 'MY Test · 9 Jun 2026 — Lauren
+ * Moody · head chef'. Length/type/home port/region are internal and never
+ * included. Returns '' when there's no galley identity (omit gracefully).
+ */
+export function galleyHeader(g: Galley): string {
+  const vessel = (g.vessel ?? '').trim();
+  const name = (g.name ?? '').trim();
+  const role = (g.role ?? '').trim();
+  if (!vessel && !name && !role) return '';
+  const left = [vessel, shortDate()].filter(Boolean).join(' · ');
+  const right = [name, role].filter(Boolean).join(' · ');
+  return [left, right].filter(Boolean).join(' — ');
+}
+
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -45,14 +66,12 @@ export function countRows(rows: ExportRow[]): number {
   return rows.filter((r) => r.qty > 0).length;
 }
 
-/** Plain-text grouped list (for Copy / Email body). */
-export function listText(
-  title: string,
-  groups: ExportGroup[],
-  count: number,
-  opts: { signature?: boolean } = {},
-): string {
-  let t = `${title.toUpperCase()} — ${shortDate()}\n`;
+/** Plain-text grouped list (for Copy / Email body). Galley header on top. */
+export function listText(title: string, groups: ExportGroup[], count: number, header = ''): string {
+  let t = '';
+  if (header) t += `${header}\n`;
+  // keep a date on the title line only when there's no galley header carrying it
+  t += `${title.toUpperCase()}${header ? '' : ` — ${shortDate()}`}\n`;
   for (const g of groups) {
     t += `\n${g.cat.toUpperCase()}\n`;
     for (const it of g.items) {
@@ -60,7 +79,6 @@ export function listText(
     }
   }
   t += `\n${count} line items total.`;
-  if (opts.signature) t += `\n\n${SIGNATURE}`;
   return t;
 }
 
@@ -73,9 +91,12 @@ export function mailtoHref(subject: string, body: string): string {
   return `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
-/** CSV — raw data, no in-file branding. */
-export function listCsv(groups: ExportGroup[]): string {
-  let csv = 'Category,Item,Quantity,Unit,Note\n';
+/** CSV — raw data. Optional galley header as a single comment cell (no commas,
+ *  so it can't shift the data columns). */
+export function listCsv(groups: ExportGroup[], header = ''): string {
+  let csv = '';
+  if (header) csv += `# ${header}\n`; // header uses ' · '/' — ' (no commas) → one cell
+  csv += 'Category,Item,Quantity,Unit,Note\n';
   for (const g of groups) {
     for (const it of g.items) {
       csv += `"${g.cat}","${it.name}",${it.qty},"${it.unit || ''}","${(it.note || '').replace(/"/g, '""')}"\n`;
@@ -96,16 +117,22 @@ export function csvFilename(vesselOrTitle: string): string {
  */
 export function brandedPrintHtml(
   title: string,
-  vesselName: string,
+  galley: Galley,
   groups: ExportGroup[],
   count: number,
 ): string {
-  const heading = vesselName.trim() || title;
-  const subtitle = vesselName.trim() && vesselName.trim() !== title ? `${esc(title)} · ` : '';
+  const vessel = (galley.vessel ?? '').trim();
+  const nameRole = [(galley.name ?? '').trim(), (galley.role ?? '').trim()].filter(Boolean).join(' · ');
+  const heading = vessel || title;
+  const metaParts: string[] = [];
+  if (vessel && title && title !== vessel) metaParts.push(esc(title));
+  metaParts.push(longDate());
+  if (nameRole) metaParts.push(esc(nameRole));
+  metaParts.push(`${count} line items`);
   let h =
     `<div class="pa-brand"><img class="pa-logo" src="/Centered_Logo.svg" alt="Cargo" /><span class="pa-sub">Provisions</span></div>` +
     `<h2>${esc(heading)}</h2>` +
-    `<div class="pmeta">${subtitle}${longDate()} · ${count} line items</div>`;
+    `<div class="pmeta">${metaParts.join(' · ')}</div>`;
   for (const g of groups) {
     h += `<h3>${esc(g.cat)}</h3>`;
     for (const it of g.items) {

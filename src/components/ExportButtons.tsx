@@ -12,7 +12,9 @@ import {
   downloadCsv,
   csvFilename,
   copyText,
+  galleyHeader,
   type ExportGroup,
+  type Galley,
 } from '../lib/listExport';
 
 /**
@@ -34,19 +36,31 @@ export function ExportButtons({
 }) {
   const { user } = useAuth();
   const toast = useToast();
-  const [vessel, setVessel] = useState('');
+  const [galley, setGalley] = useState<Galley>({});
   const [dlOpen, setDlOpen] = useState(false);
   const dlRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setGalley({});
+      return;
+    }
     supabase
       .from('chef_profiles')
-      .select('vessel_name')
+      .select('vessel_name,full_name,role')
       .eq('id', user.id)
       .maybeSingle()
-      .then(({ data }) => setVessel(((data?.vessel_name as string) || '').trim()));
+      .then(({ data }) =>
+        setGalley({
+          vessel: (data?.vessel_name as string) ?? '',
+          name: (data?.full_name as string) ?? '',
+          role: (data?.role as string) ?? '',
+        }),
+      );
   }, [user]);
+
+  const vessel = (galley.vessel ?? '').trim();
+  const header = galleyHeader(galley);
 
   useEffect(() => {
     if (!dlOpen) return;
@@ -67,28 +81,28 @@ export function ExportButtons({
 
   const doCopy = async () => {
     if (!count) return empty();
-    const ok = await copyText(listText(title, groups, count));
+    const ok = await copyText(listText(title, groups, count, header));
     toast(ok ? 'Copied — paste into WhatsApp or email' : 'Copy failed — long-press to select');
     after();
   };
 
   const doEmail = () => {
     if (!count) return empty();
-    window.location.href = mailtoHref(listSubject(title), listText(title, groups, count));
+    window.location.href = mailtoHref(listSubject(title), listText(title, groups, count, header));
     after();
   };
 
   const doPdf = () => {
     setDlOpen(false);
     if (!count) return empty();
-    printHtml(brandedPrintHtml(title, vessel, groups, count));
+    printHtml(brandedPrintHtml(title, galley, groups, count));
     after();
   };
 
   const doCsv = () => {
     setDlOpen(false);
     if (!count) return empty();
-    downloadCsv(csvFilename(vessel || title), listCsv(groups));
+    downloadCsv(csvFilename(vessel || title), listCsv(groups, header));
     toast('CSV downloaded');
     after();
   };
