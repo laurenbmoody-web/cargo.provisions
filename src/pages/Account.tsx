@@ -205,9 +205,6 @@ export function Account() {
     <>
       <div className="account">
         <h1>Account &amp; profile</h1>
-        <p style={{ color: 'var(--ink-soft)', marginTop: 0 }}>
-          {profile.email} · <Link to="/lists">My lists</Link> · <Link to="/">Back to catalogue</Link>
-        </p>
 
         {/* Profile */}
         <div className="panel">
