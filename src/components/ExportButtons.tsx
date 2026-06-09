@@ -35,7 +35,6 @@ export function ExportButtons({
   const { user } = useAuth();
   const toast = useToast();
   const [vessel, setVessel] = useState('');
-  const [sig, setSig] = useState(true);
   const [dlOpen, setDlOpen] = useState(false);
   const dlRef = useRef<HTMLDivElement>(null);
 
@@ -68,15 +67,14 @@ export function ExportButtons({
 
   const doCopy = async () => {
     if (!count) return empty();
-    const ok = await copyText(listText(title, groups, count, { signature: sig }));
+    const ok = await copyText(listText(title, groups, count));
     toast(ok ? 'Copied — paste into WhatsApp or email' : 'Copy failed — long-press to select');
     after();
   };
 
   const doEmail = () => {
     if (!count) return empty();
-    const body = listText(title, groups, count, { signature: sig });
-    window.location.href = mailtoHref(listSubject(title), body);
+    window.location.href = mailtoHref(listSubject(title), listText(title, groups, count));
     after();
   };
 
@@ -97,14 +95,14 @@ export function ExportButtons({
 
   return (
     <div className="export-actions">
+      <button className="ea-btn primary" onClick={doCopy}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="9" y="9" width="11" height="11" rx="2" />
+          <path d="M5 15V5a2 2 0 0 1 2-2h10" />
+        </svg>
+        Copy
+      </button>
       <div className="ea-row">
-        <button className="ea-btn primary" onClick={doCopy}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="9" y="9" width="11" height="11" rx="2" />
-            <path d="M5 15V5a2 2 0 0 1 2-2h10" />
-          </svg>
-          Copy
-        </button>
         <button className="ea-btn" onClick={doEmail}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="5" width="18" height="14" rx="2" />
@@ -130,10 +128,6 @@ export function ExportButtons({
           )}
         </div>
       </div>
-      <label className="ea-sig">
-        <input type="checkbox" checked={sig} onChange={(e) => setSig(e.target.checked)} />
-        Add “— Sent via Cargo Provisions” to Copy &amp; Email
-      </label>
     </div>
   );
 }
