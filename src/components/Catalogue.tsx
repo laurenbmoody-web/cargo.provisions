@@ -1,18 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  DATA,
-  TAGS,
-  CATEGORY_CUISINE,
-  CUISINES,
-  CUISINE_LABEL,
-  slug,
-} from '../data/catalogue';
+import { DATA, TAGS, CATEGORY_CUISINE, CUISINE_LABEL, slug } from '../data/catalogue';
 import { useOrder } from '../lib/order';
 import { useAuth } from '../lib/auth';
 import { useSearch } from '../lib/ui';
 import { logSearchMiss } from '../lib/analytics';
 import { useToast } from './Toast';
 import { ItemRow, type CatItem } from './ItemRow';
+import { CuisineFilter } from './CuisineFilter';
 
 interface CatModel {
   name: string;
@@ -60,17 +54,22 @@ export function Catalogue() {
   );
 
   const { query, setQuery } = useSearch();
-  const [cuisine, setCuisine] = useState('all');
+  const [selected, setSelected] = useState<string[]>([]); // selected cuisine codes (OR logic)
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-  const filtering = query.trim() !== '' || cuisine !== 'all';
+  const filtering = query.trim() !== '' || selected.length > 0;
   const q = query.trim().toLowerCase();
 
   const matches = (it: CatItem) => {
     const okText = !q || it.name.toLowerCase().includes(q);
-    const okCu = cuisine === 'all' || (it.cu ?? []).includes(cuisine);
+    const okCu = selected.length === 0 || (it.cu ?? []).some((c) => selected.includes(c));
     return okText && okCu;
   };
+
+  const cuisineSummary =
+    selected.length === 1
+      ? CUISINE_LABEL[selected[0]] ?? selected[0]
+      : `${selected.length} cuisines`;
 
   // Per-category filtered items (only computed when filtering).
   const filteredByCat = useMemo(() => {
@@ -79,7 +78,7 @@ export function Catalogue() {
     for (const g of model) for (const c of g.cats) out[c.name] = c.items.filter(matches);
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [model, filtering, q, cuisine]);
+  }, [model, filtering, q, selected]);
 
   const anyResults = filtering
     ? Object.values(filteredByCat).some((arr) => arr.length > 0)
@@ -165,34 +164,10 @@ export function Catalogue() {
       <div className="toolbar">
         <div className="wrap">
           <div className="filterbar">
-            <span className="cuisine-label-fixed">Cuisine</span>
-            {cuisine !== 'all' && (
-              <button className="filtered-chip" onClick={() => setCuisine('all')} title="Clear filter">
-                Filtered: {CUISINE_LABEL[cuisine] ?? cuisine}
-                <span className="fx" aria-hidden="true">✕</span>
-              </button>
-            )}
-            <div className="cuisine-scroll">
-              <button
-                className={`chip${cuisine === 'all' ? ' cu-active' : ''}`}
-                onClick={() => setCuisine('all')}
-              >
-                All
-              </button>
-              {CUISINES.map(([code, label]) => (
-                <button
-                  key={code}
-                  className={`chip${cuisine === code ? ' cu-active' : ''}`}
-                  onClick={() => setCuisine(code)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+            <CuisineFilter selected={selected} onChange={setSelected} />
             <div className="jumpto" ref={jumpRef}>
-              <span className="vdivider" />
               <button
-                className="jumpto-btn"
+                className="filter-btn"
                 aria-haspopup="menu"
                 aria-expanded={jumpOpen}
                 onClick={() => setJumpOpen((o) => !o)}
@@ -219,6 +194,14 @@ export function Catalogue() {
               )}
             </div>
           </div>
+          {selected.length > 0 && (
+            <div className="showing-row">
+              <button className="filtered-chip" onClick={() => setSelected([])} title="Clear filter">
+                Showing: {cuisineSummary}
+                <span className="fx" aria-hidden="true">✕</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -283,7 +266,7 @@ export function Catalogue() {
                   style={{ border: 'none', display: 'inline', width: 'auto', padding: '0 4px' }}
                   onClick={() => {
                     setQuery('');
-                    setCuisine('all');
+                    setSelected([]);
                     openModal(allCats[0], q);
                   }}
                 >
@@ -291,7 +274,7 @@ export function Catalogue() {
                 </button>
               </>
             ) : (
-              <>Nothing tagged “{CUISINE_LABEL[cuisine] ?? cuisine}” yet — try another cuisine or “All”.</>
+              <>Nothing tagged “{cuisineSummary}” yet — try another cuisine or clear the filter.</>
             )}
           </div>
         )}

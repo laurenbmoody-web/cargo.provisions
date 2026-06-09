@@ -519,79 +519,23 @@ header.top h1 em {
   color: var(--ink-soft);
 }
 
-/* ---------- Filter bar (single row: cuisine pills + Jump to) ---------- */
+/* ---------- Filter bar (two compact dropdowns: Cuisine + Jump to) ---------- */
 .filterbar {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 8px 0;
-}
-.cuisine-label-fixed {
-  flex: none;
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  font-weight: 600;
-}
-.filtered-chip {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background: var(--navy);
-  color: #fff;
-  border: 1px solid var(--navy);
-  border-radius: 30px;
-  padding: 6px 12px;
-  font: inherit;
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.filtered-chip:hover {
-  background: var(--navy-deep);
-}
-.filtered-chip .fx {
-  font-size: 13px;
-  opacity: 0.85;
-}
-.cuisine-scroll {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-  /* soft fade at the right edge to hint at overflow */
-  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent 100%);
-  mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent 100%);
-}
-.cuisine-scroll::-webkit-scrollbar {
-  display: none;
-}
-.cuisine-scroll .chip {
-  flex: none;
-}
-.jumpto {
-  flex: none;
-  position: relative;
-  display: flex;
-  align-items: center;
   gap: 10px;
+  padding: 9px 0 6px;
 }
-.vdivider {
-  width: 1px;
-  height: 24px;
-  background: var(--line);
+.cuisine-filter,
+.jumpto {
+  position: relative;
   flex: none;
 }
-.jumpto-btn {
+/* Shared trigger button for Cuisine + Jump to */
+.filter-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   padding: 8px 14px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
@@ -602,14 +546,160 @@ header.top h1 em {
   font-size: 13px;
   cursor: pointer;
   white-space: nowrap;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
-.jumpto-btn:hover {
+.filter-btn:hover {
   border-color: var(--navy);
+}
+.filter-btn.active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
 }
 .caret-sm {
   font-size: 10px;
   opacity: 0.7;
 }
+
+/* 'Showing: …' clear-chip under the filter row */
+.showing-row {
+  padding-bottom: 8px;
+}
+.filtered-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--rust-soft);
+  color: var(--rust);
+  border: 1px solid #e7cdbb;
+  border-radius: 30px;
+  padding: 5px 12px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.filtered-chip:hover {
+  background: #efd9c9;
+}
+.filtered-chip .fx {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+/* Cuisine multi-select menu (popover on desktop) */
+.sheet-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: transparent;
+}
+.cuisine-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 100;
+  width: 264px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 14px 38px rgba(27, 30, 61, 0.2);
+  overflow: hidden;
+}
+.cuisine-menu-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--line);
+  font-weight: 600;
+  color: var(--navy);
+  font-size: 13.5px;
+}
+.link-btn {
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--rust);
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.link-btn:disabled {
+  color: var(--ink-soft);
+  opacity: 0.5;
+  cursor: default;
+}
+.cuisine-list {
+  overflow-y: auto;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  text-align: left;
+  padding: 9px 10px;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.check-row:hover {
+  background: var(--paper);
+}
+.check-row.on {
+  color: var(--navy);
+  font-weight: 600;
+}
+.check-box {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid var(--line);
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+.check-row.on .check-box {
+  background: var(--navy);
+  border-color: var(--navy);
+}
+.cuisine-menu-foot {
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--line);
+}
+.btn-done {
+  width: 100%;
+  padding: 11px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--navy);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+.btn-done:hover {
+  background: var(--navy-deep);
+}
+
 .jumpto-menu {
   position: absolute;
   top: calc(100% + 8px);
@@ -1567,23 +1657,42 @@ footer.site .cargo {
   color: var(--ink-soft);
   font-size: 14px;
 }
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
 
 @media (max-width: 640px) {
   body {
     padding-bottom: 140px;
   }
-  /* Filter bar: pills scroll, Jump-to stays pinned right */
-  .cuisine-label-fixed {
-    display: none;
+  /* Cuisine menu becomes a bottom sheet on mobile */
+  .sheet-scrim {
+    background: rgba(27, 30, 61, 0.45);
   }
-  .filterbar {
-    gap: 8px;
+  .cuisine-menu {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: 100%;
+    max-height: 78vh;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -10px 40px rgba(27, 30, 61, 0.28);
+    animation: sheet-up 0.24s ease;
   }
-  .jumpto {
-    gap: 8px;
+  .cuisine-menu-head {
+    padding: 16px 16px 12px;
+    font-size: 15px;
   }
-  .jumpto-btn {
-    padding: 8px 11px;
+  .check-row {
+    padding: 12px 12px;
+    font-size: 15px;
   }
   .row-main {
     grid-template-columns: 1fr 92px 104px;
