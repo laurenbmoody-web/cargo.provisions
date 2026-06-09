@@ -15,7 +15,7 @@ export function Terms() {
 
         <h2>About this tool</h2>
         <p>
-          Cargo Provisions is a free reference and ordering tool for catering and hospitality
+          Cargo Provisions is a free reference and provisioning tool for catering and hospitality
           professionals, operated by the team behind Cargo ("we", "us"). By using it you accept
           these terms and our <Link to="/privacy">Privacy Policy</Link>. If you don't agree, please
           don't use the tool.
@@ -23,7 +23,7 @@ export function Terms() {
 
         <h2>The catalogue is a reference</h2>
         <p>
-          The catalogue is a reference list to help you build and send an order.{' '}
+          The catalogue is a reference list to help you build and send your provisions.{' '}
           <b>Availability, pricing, seasonality and exact specifications must always be confirmed
           with your supplier.</b>{' '}
           We make no warranty that any item listed is available, accurately described, or suitable
@@ -33,7 +33,7 @@ export function Terms() {
 
         <h2>Your account</h2>
         <p>
-          You can browse and build an order without an account. If you create one, keep your email
+          You can browse and build a list without an account. If you create one, keep your email
           access secure, as that's how you sign in. You're responsible for activity under your
           account. You can delete your account and data at any time from your{' '}
           <Link to="/account">account page</Link>.

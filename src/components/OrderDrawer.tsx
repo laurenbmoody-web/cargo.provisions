@@ -55,7 +55,7 @@ export function OrderDrawer() {
       month: 'long',
       year: 'numeric',
     });
-    let t = `PROVISIONS ORDER — ${date}\n`;
+    let t = `PROVISIONS LIST — ${date}\n`;
     for (const g of grouped) {
       t += `\n${g.cat.toUpperCase()}\n`;
       for (const it of g.items) {
@@ -67,7 +67,7 @@ export function OrderDrawer() {
   };
 
   const doCopy = async () => {
-    if (!count) return toast('Order is empty');
+    if (!count) return toast('List is empty');
     const t = orderText();
     try {
       await navigator.clipboard.writeText(t);
@@ -88,7 +88,7 @@ export function OrderDrawer() {
   };
 
   const doCsv = () => {
-    if (!count) return toast('Order is empty');
+    if (!count) return toast('List is empty');
     let csv = 'Category,Item,Quantity,Unit,Note\n';
     for (const g of grouped) {
       for (const it of g.items) {
@@ -98,14 +98,14 @@ export function OrderDrawer() {
     const blob = new Blob([csv], { type: 'text/csv' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `provisions-order-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `provisions-list-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(a.href);
     toast('CSV downloaded');
   };
 
   const doPrint = () => {
-    if (!count) return toast('Order is empty');
+    if (!count) return toast('List is empty');
     const pa = document.getElementById('printArea');
     if (!pa) return;
     const date = new Date().toLocaleDateString('en-GB', {
@@ -114,7 +114,7 @@ export function OrderDrawer() {
       month: 'long',
       year: 'numeric',
     });
-    let h = `<h2>Provisions Order</h2><div class="pmeta">${date} · ${count} line items</div>`;
+    let h = `<h2>Provisions List</h2><div class="pmeta">${date} · ${count} line items</div>`;
     for (const g of grouped) {
       h += `<h3>${g.cat}</h3>`;
       for (const it of g.items) {
@@ -127,9 +127,9 @@ export function OrderDrawer() {
 
   const doClear = () => {
     if (!count) return toast('Already empty');
-    if (!window.confirm('Clear the whole order?')) return;
+    if (!window.confirm('Clear the whole list?')) return;
     clearOrder();
-    toast('Order cleared');
+    toast('List cleared');
   };
 
   const dmeta = count
@@ -142,7 +142,7 @@ export function OrderDrawer() {
       <aside className={`drawer${open ? ' open' : ''}`} aria-hidden={!open}>
         <div className="drawer-head">
           <div style={{ flex: 1 }}>
-            <h2>The Order</h2>
+            <h2>Your list</h2>
             <div className="dmeta">
               {dmeta}
               {isDbMode && saveStatus === 'saving' && ' · saving…'}
@@ -186,7 +186,7 @@ export function OrderDrawer() {
           <div className="actions">
             {!isDbMode && (
               <button className="save-cta" onClick={onSignIn}>
-                Sign in to save this order
+                Sign in to save this list
               </button>
             )}
             <button className="primary" onClick={doCopy}>
@@ -199,7 +199,7 @@ export function OrderDrawer() {
             <button onClick={doCsv}>Export CSV</button>
             <button onClick={doPrint}>Print</button>
             <button className="danger" style={{ gridColumn: '1 / -1' }} onClick={doClear}>
-              Clear order
+              Clear list
             </button>
           </div>
         </div>

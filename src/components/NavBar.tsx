@@ -118,8 +118,8 @@ export function NavBar() {
           {/* Order history */}
           <button
             className="icon-btn"
-            aria-label="Order history"
-            title="Order history"
+            aria-label="My lists"
+            title="My lists"
             onClick={() => (configured && user ? go('/account') : openSignIn())}
           >
             <HistoryIcon />
@@ -153,7 +153,7 @@ export function NavBar() {
                     </button>
                     <button className="acct-item" role="menuitem" onClick={() => go('/account')}>
                       <HistoryIcon size={18} />
-                      Order history
+                      My lists
                     </button>
                     <button className="acct-item" role="menuitem" onClick={() => go('/help')}>
                       <HelpIcon size={18} />
@@ -185,7 +185,7 @@ export function NavBar() {
                       Log in or sign up
                     </button>
                     <div className="acct-note">
-                      Browse freely — sign in only to save your order across devices.
+                      Browse freely — sign in only to save your list across devices.
                     </div>
                     <div className="acct-divider" />
                     <Link className="acct-item" role="menuitem" to="/help" onClick={() => setMenuOpen(false)}>

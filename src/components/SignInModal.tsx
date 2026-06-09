@@ -101,21 +101,21 @@ export function SignInModal({ open, onClose }: { open: boolean; onClose: () => v
   return (
     <div className="modal-scrim" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal">
-        <h3>Save your order</h3>
+        <h3>Save your list</h3>
         <p className="modal-sub">
-          Sign in to save this order and pick it up on any device. No password — we email you a
+          Sign in to save this list and pick it up on any device. No password — we email you a
           secure link.
         </p>
 
         {!configured ? (
           <p style={{ color: '#b23b1f', fontSize: 13 }}>
-            Sign-in isn't configured yet (missing Supabase keys). The catalogue and your local order
+            Sign-in isn't configured yet (missing Supabase keys). The catalogue and your local list
             still work.
           </p>
         ) : sent ? (
           <p style={{ fontSize: 14, lineHeight: 1.5 }}>
             ✉️ Check your inbox — we've sent a sign-in link to <b>{email}</b>. Open it on this device
-            to keep your order.
+            to keep your list.
           </p>
         ) : (
           <>

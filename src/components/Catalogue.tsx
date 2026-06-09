@@ -232,7 +232,7 @@ export function Catalogue() {
                     >
                       <span className="cname">{c.name}</span>
                       <span className="cmeta">{c.items.length}</span>
-                      {badge > 0 && <span className="inorder">{badge} in order</span>}
+                      {badge > 0 && <span className="inorder">{badge} in list</span>}
                       <svg className="caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="m6 9 6 6 6-6" />
                       </svg>

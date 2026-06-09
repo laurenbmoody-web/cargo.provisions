@@ -28,7 +28,7 @@ export function StorageNotice() {
   return (
     <div className="storage-notice">
       <span>
-        We use essential storage to keep your order and keep you signed in. No ad tracking. If you
+        We use essential storage to keep your list and keep you signed in. No ad tracking. If you
         choose Google sign-in, Google is used too. See our <Link to="/privacy">Privacy Policy</Link>.
       </span>
       <button onClick={dismiss}>Got it</button>
