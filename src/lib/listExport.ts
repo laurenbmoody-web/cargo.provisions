@@ -1,4 +1,4 @@
-import { DATA } from '../data/catalogue';
+import { DATA, slug } from '../data/catalogue';
 
 export interface ExportRow {
   item_name: string;
@@ -11,6 +11,16 @@ export interface ExportGroup {
   cat: string;
   items: { name: string; unit: string; qty: number; note: string }[];
 }
+
+export const SIGNATURE = '— Sent via Cargo Provisions';
+
+const esc = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+const longDate = () =>
+  new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+const shortDate = () =>
+  new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
 /** Group rows (qty > 0) by category in catalogue order. */
 export function groupRows(rows: ExportRow[]): ExportGroup[] {
@@ -35,14 +45,14 @@ export function countRows(rows: ExportRow[]): number {
   return rows.filter((r) => r.qty > 0).length;
 }
 
-export function listText(title: string, groups: ExportGroup[], count: number): string {
-  const date = new Date().toLocaleDateString('en-GB', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-  let t = `${title.toUpperCase()} — ${date}\n`;
+/** Plain-text grouped list (for Copy / Email body). */
+export function listText(
+  title: string,
+  groups: ExportGroup[],
+  count: number,
+  opts: { signature?: boolean } = {},
+): string {
+  let t = `${title.toUpperCase()} — ${shortDate()}\n`;
   for (const g of groups) {
     t += `\n${g.cat.toUpperCase()}\n`;
     for (const it of g.items) {
@@ -50,9 +60,20 @@ export function listText(title: string, groups: ExportGroup[], count: number): s
     }
   }
   t += `\n${count} line items total.`;
+  if (opts.signature) t += `\n\n${SIGNATURE}`;
   return t;
 }
 
+/** Email subject line. */
+export function listSubject(title: string): string {
+  return `Provisions order — ${title} — ${shortDate()}`;
+}
+
+export function mailtoHref(subject: string, body: string): string {
+  return `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+/** CSV — raw data, no in-file branding. */
 export function listCsv(groups: ExportGroup[]): string {
   let csv = 'Category,Item,Quantity,Unit,Note\n';
   for (const g of groups) {
@@ -63,23 +84,45 @@ export function listCsv(groups: ExportGroup[]): string {
   return csv;
 }
 
-export function listPrintHtml(title: string, groups: ExportGroup[], count: number): string {
-  const date = new Date().toLocaleDateString('en-GB', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-  let h = `<h2>${title}</h2><div class="pmeta">${date} · ${count} line items</div>`;
+/** Branded filename: cargo-provisions-[vessel]-[date].csv */
+export function csvFilename(vesselOrTitle: string): string {
+  const v = slug(vesselOrTitle) || 'list';
+  return `cargo-provisions-${v}-${new Date().toISOString().slice(0, 10)}.csv`;
+}
+
+/**
+ * Branded, supplier-facing print/PDF document built from the list data.
+ * Cargo Provisions wordmark + vessel + date header, sections, quiet footer.
+ */
+export function brandedPrintHtml(
+  title: string,
+  vesselName: string,
+  groups: ExportGroup[],
+  count: number,
+): string {
+  const heading = vesselName.trim() || title;
+  const subtitle = vesselName.trim() && vesselName.trim() !== title ? `${esc(title)} · ` : '';
+  let h =
+    `<div class="pa-brand"><img class="pa-logo" src="/Centered_Logo.svg" alt="Cargo" /><span class="pa-sub">Provisions</span></div>` +
+    `<h2>${esc(heading)}</h2>` +
+    `<div class="pmeta">${subtitle}${longDate()} · ${count} line items</div>`;
   for (const g of groups) {
-    h += `<h3>${g.cat}</h3>`;
+    h += `<h3>${esc(g.cat)}</h3>`;
     for (const it of g.items) {
-      h += `<div class="pr"><span>${it.qty} × ${it.name}${
-        it.note ? ` <em style="color:#666">— ${it.note}</em>` : ''
-      }</span><span>${it.unit || ''}</span></div>`;
+      h += `<div class="pr"><span>${it.qty} × ${esc(it.name)}${
+        it.note ? ` <em style="color:#666">— ${esc(it.note)}</em>` : ''
+      }</span><span>${esc(it.unit || '')}</span></div>`;
     }
   }
+  h += `<div class="pa-foot">Built with Cargo Provisions · cargoprovisions.netlify.app</div>`;
   return h;
+}
+
+export function printHtml(html: string) {
+  const pa = document.getElementById('printArea');
+  if (!pa) return;
+  pa.innerHTML = html;
+  window.print();
 }
 
 export function downloadCsv(filename: string, csv: string) {

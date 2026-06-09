@@ -1,0 +1,139 @@
+import { useEffect, useRef, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../lib/auth';
+import { useToast } from './Toast';
+import {
+  listText,
+  listCsv,
+  listSubject,
+  mailtoHref,
+  brandedPrintHtml,
+  printHtml,
+  downloadCsv,
+  csvFilename,
+  copyText,
+  type ExportGroup,
+} from '../lib/listExport';
+
+/**
+ * Uniform export actions for every list surface (drawer, full page, past
+ * lists): Copy (primary) · Email (mailto) · Download ▾ (PDF / CSV). All output
+ * is serialised from the list data, never the DOM. After any export it calls
+ * onExported() so the caller can offer 'Mark this list as sent?'.
+ */
+export function ExportButtons({
+  title,
+  groups,
+  count,
+  onExported,
+}: {
+  title: string;
+  groups: ExportGroup[];
+  count: number;
+  onExported?: () => void | Promise<void>;
+}) {
+  const { user } = useAuth();
+  const toast = useToast();
+  const [vessel, setVessel] = useState('');
+  const [sig, setSig] = useState(true);
+  const [dlOpen, setDlOpen] = useState(false);
+  const dlRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('chef_profiles')
+      .select('vessel_name')
+      .eq('id', user.id)
+      .maybeSingle()
+      .then(({ data }) => setVessel(((data?.vessel_name as string) || '').trim()));
+  }, [user]);
+
+  useEffect(() => {
+    if (!dlOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (dlRef.current && !dlRef.current.contains(e.target as Node)) setDlOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [dlOpen]);
+
+  const empty = () => {
+    toast('This list is empty');
+    return true;
+  };
+  const after = () => {
+    void onExported?.();
+  };
+
+  const doCopy = async () => {
+    if (!count) return empty();
+    const ok = await copyText(listText(title, groups, count, { signature: sig }));
+    toast(ok ? 'Copied — paste into WhatsApp or email' : 'Copy failed — long-press to select');
+    after();
+  };
+
+  const doEmail = () => {
+    if (!count) return empty();
+    const body = listText(title, groups, count, { signature: sig });
+    window.location.href = mailtoHref(listSubject(title), body);
+    after();
+  };
+
+  const doPdf = () => {
+    setDlOpen(false);
+    if (!count) return empty();
+    printHtml(brandedPrintHtml(title, vessel, groups, count));
+    after();
+  };
+
+  const doCsv = () => {
+    setDlOpen(false);
+    if (!count) return empty();
+    downloadCsv(csvFilename(vessel || title), listCsv(groups));
+    toast('CSV downloaded');
+    after();
+  };
+
+  return (
+    <div className="export-actions">
+      <div className="ea-row">
+        <button className="ea-btn primary" onClick={doCopy}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="9" y="9" width="11" height="11" rx="2" />
+            <path d="M5 15V5a2 2 0 0 1 2-2h10" />
+          </svg>
+          Copy
+        </button>
+        <button className="ea-btn" onClick={doEmail}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="5" width="18" height="14" rx="2" />
+            <path d="m3 7 9 6 9-6" />
+          </svg>
+          Email
+        </button>
+        <div className="ea-dl" ref={dlRef}>
+          <button className="ea-btn" aria-haspopup="menu" aria-expanded={dlOpen} onClick={() => setDlOpen((o) => !o)}>
+            Download <span className="caret-sm" aria-hidden="true">▾</span>
+          </button>
+          {dlOpen && (
+            <div className="ea-menu" role="menu">
+              <button className="ea-menu-item" role="menuitem" onClick={doPdf}>
+                <b>PDF</b>
+                <span>to send or print</span>
+              </button>
+              <button className="ea-menu-item" role="menuitem" onClick={doCsv}>
+                <b>CSV</b>
+                <span>for spreadsheets</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+      <label className="ea-sig">
+        <input type="checkbox" checked={sig} onChange={(e) => setSig(e.target.checked)} />
+        Add “— Sent via Cargo Provisions” to Copy &amp; Email
+      </label>
+    </div>
+  );
+}
