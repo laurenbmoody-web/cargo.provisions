@@ -80,7 +80,6 @@ export function Home() {
       {needsOnboarding && <Onboarding onDone={() => setNeedsOnboarding(false)} />}
 
       <StorageNotice />
-      <div id="printArea" />
     </>
   );
 }

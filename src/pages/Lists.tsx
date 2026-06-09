@@ -6,7 +6,6 @@ import { useOrder } from '../lib/order';
 import { useToast } from '../components/Toast';
 import { Footer } from '../components/Footer';
 import { Spinner } from '../components/Spinner';
-import { ListDetail, type DetailList } from '../components/ListDetail';
 
 interface ListSummary {
   id: string;
@@ -39,7 +38,6 @@ export function Lists() {
   const [loading, setLoading] = useState(true);
   const [menuId, setMenuId] = useState<string | null>(null);
   const [favs, setFavs] = useState<Set<string>>(new Set());
-  const [detail, setDetail] = useState<DetailList | null>(null);
 
   const favKey = user ? `provisions:favs:${user.id}` : '';
 
@@ -231,7 +229,7 @@ export function Lists() {
             const sent = o.status === 'sent';
             return (
               <div key={o.id} className="list-card">
-                <button className="lc-open" onClick={() => setDetail(o)}>
+                <button className="lc-open" onClick={() => navigate(`/lists/${o.id}`)}>
                   <div className="lc-title">{o.title}</div>
                   <div className="lc-meta">
                     {o.itemCount} item{o.itemCount === 1 ? '' : 's'} · updated{' '}
@@ -295,17 +293,6 @@ export function Lists() {
           })
         )}
       </div>
-
-      {detail && (
-        <ListDetail
-          list={detail}
-          onClose={() => setDetail(null)}
-          onChanged={() => {
-            void load();
-          }}
-        />
-      )}
-      <div id="printArea" />
       <Footer />
     </>
   );
