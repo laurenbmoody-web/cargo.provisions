@@ -13,6 +13,7 @@ interface ListSummary {
   status: string;
   updated_at: string;
   itemCount: number;
+  favorite: boolean;
 }
 
 const MoreIcon = () => (
@@ -37,6 +38,9 @@ export function Lists() {
   const [lists, setLists] = useState<ListSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [menuId, setMenuId] = useState<string | null>(null);
+  // Favourites: synced via chef_orders.is_favorite when the column exists,
+  // otherwise fall back to per-user localStorage (so it works pre-migration).
+  const [favSynced, setFavSynced] = useState(true);
   const [favs, setFavs] = useState<Set<string>>(new Set());
 
   const favKey = user ? `provisions:favs:${user.id}` : '';
@@ -45,7 +49,7 @@ export function Lists() {
     if (configured && !user) navigate('/', { replace: true });
   }, [configured, user, navigate]);
 
-  // load favourites (per-user, local)
+  // local favourites (only used in fallback mode)
   useEffect(() => {
     if (!user) return;
     try {
@@ -56,18 +60,26 @@ export function Lists() {
     }
   }, [user]);
 
-  const toggleFav = (id: string) => {
-    setFavs((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      try {
-        if (favKey) window.localStorage.setItem(favKey, JSON.stringify([...next]));
-      } catch {
-        /* ignore */
-      }
-      return next;
-    });
+  const isFav = (o: ListSummary) => (favSynced ? o.favorite : favs.has(o.id));
+
+  const toggleFav = async (o: ListSummary) => {
+    if (favSynced) {
+      const next = !o.favorite;
+      setLists((prev) => prev.map((l) => (l.id === o.id ? { ...l, favorite: next } : l)));
+      await supabase.from('chef_orders').update({ is_favorite: next }).eq('id', o.id);
+    } else {
+      setFavs((prev) => {
+        const next = new Set(prev);
+        if (next.has(o.id)) next.delete(o.id);
+        else next.add(o.id);
+        try {
+          if (favKey) window.localStorage.setItem(favKey, JSON.stringify([...next]));
+        } catch {
+          /* ignore */
+        }
+        return next;
+      });
+    }
   };
 
   // close overflow menu on outside click / Escape
@@ -88,20 +100,40 @@ export function Lists() {
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const { data: os } = await supabase
+    let synced = true;
+    const primary = await supabase
       .from('chef_orders')
-      .select('id,title,status,updated_at')
+      .select('id,title,status,updated_at,is_favorite')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false });
-    const rows = (os ?? []) as Omit<ListSummary, 'itemCount'>[];
+    let data = primary.data as Array<Record<string, unknown>> | null;
+    if (primary.error) {
+      // is_favorite column not present yet → fall back to local favourites
+      synced = false;
+      const fb = await supabase
+        .from('chef_orders')
+        .select('id,title,status,updated_at')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false });
+      data = fb.data as Array<Record<string, unknown>> | null;
+    }
+    setFavSynced(synced);
+    const rows = data ?? [];
     const withCounts = await Promise.all(
       rows.map(async (o) => {
         const { count } = await supabase
           .from('chef_order_items')
           .select('id', { count: 'exact', head: true })
-          .eq('order_id', o.id)
+          .eq('order_id', o.id as string)
           .gt('qty', 0);
-        return { ...o, itemCount: count ?? 0 };
+        return {
+          id: o.id as string,
+          title: o.title as string,
+          status: o.status as string,
+          updated_at: o.updated_at as string,
+          favorite: !!o.is_favorite,
+          itemCount: count ?? 0,
+        } as ListSummary;
       }),
     );
     setLists(withCounts);
@@ -207,7 +239,7 @@ export function Lists() {
   }
 
   // favourites sort to the top (each subset already newest-first)
-  const sorted = [...lists].sort((a, b) => Number(favs.has(b.id)) - Number(favs.has(a.id)));
+  const sorted = [...lists].sort((a, b) => Number(isFav(b)) - Number(isFav(a)));
 
   return (
     <>
@@ -225,7 +257,7 @@ export function Lists() {
           <p style={{ color: 'var(--ink-soft)' }}>No saved lists yet.</p>
         ) : (
           sorted.map((o) => {
-            const fav = favs.has(o.id);
+            const fav = isFav(o);
             const sent = o.status === 'sent';
             return (
               <div key={o.id} className="list-card">
@@ -245,7 +277,7 @@ export function Lists() {
                   className={`star-btn${fav ? ' on' : ''}`}
                   aria-label={fav ? 'Unfavourite' : 'Favourite'}
                   aria-pressed={fav}
-                  onClick={() => toggleFav(o.id)}
+                  onClick={() => toggleFav(o)}
                 >
                   <StarIcon filled={fav} />
                 </button>
