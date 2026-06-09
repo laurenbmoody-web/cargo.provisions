@@ -297,12 +297,16 @@ export function Lists() {
                   <StarIcon filled={fav} />
                 </button>
 
-                {o.active && <span className="badge open">Active</span>}
-                {sent && <span className="badge sent">Sent</span>}
+                {sent ? (
+                  <span className="badge sent">Sent</span>
+                ) : (
+                  <span className="badge open">Open</span>
+                )}
+                {o.active && <span className="current-tag">Current</span>}
 
                 {!o.active && (
                   <button className="btn" onClick={() => makeActive(o)}>
-                    Open
+                    Make current
                   </button>
                 )}
                 <button className="btn" onClick={() => renameList(o)}>
