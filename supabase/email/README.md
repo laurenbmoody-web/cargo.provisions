@@ -23,14 +23,25 @@ Supabase → **Project Settings → Authentication → SMTP Settings** → enabl
 
 Save. (Custom SMTP also lifts Supabase's tiny built-in email rate limit.)
 
-## 3. Use the branded template
-Supabase → **Authentication → Email Templates → Magic Link**:
-- **Subject:** `Your Cargo Provisions sign-in link`
-- **Message body:** paste the contents of `magic-link.html`.
+## 3. Use the branded template — in BOTH templates
+Supabase has a separate template per flow. Passwordless sign-in uses **two** of
+them, so paste the same `magic-link.html` body into **both** (the copy —
+"Your sign-in link" / "Sign in to Provisions" — works for either):
 
-It keeps Supabase's `{{ .ConfirmationURL }}` variable, and the header logo loads
-from `https://cargoprovisions.netlify.app/email-logo.png` (regenerate with
+- **Authentication → Email Templates → Confirm signup**  ← fires for a *new*
+  email address (this is the one you were actually receiving).
+  - Subject: `Your Cargo Provisions sign-in link`
+- **Authentication → Email Templates → Magic Link**  ← fires for a *returning*
+  user signing in again.
+  - Subject: `Your Cargo Provisions sign-in link`
+
+Both templates expose `{{ .ConfirmationURL }}`, which the template uses. The
+header logo loads from `https://cargoprovisions.netlify.app/email-logo.png`
+(must be deployed for the image to appear — regenerate with
 `node scripts/build-email-logo.mjs`).
+
+> Tip: brand the other auth templates too (Invite, Reset password, Change email)
+> the same way if you ever use them.
 
 ## 4. Test
 Sign in with email from the app → confirm the message arrives **from
