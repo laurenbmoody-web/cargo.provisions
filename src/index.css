@@ -2060,6 +2060,16 @@ footer.site .cargo {
   color: var(--navy);
   margin: 0 0 14px;
 }
+.acct-identity {
+  font-size: 13.5px;
+  color: var(--ink);
+  margin: 0 0 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.acct-identity strong {
+  font-weight: 600;
+}
 .order-card {
   display: flex;
   align-items: center;
