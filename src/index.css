@@ -1945,6 +1945,13 @@ footer.site a {
 footer.site a:hover {
   color: var(--navy);
 }
+footer.site .ig {
+  display: inline-flex;
+  align-items: center;
+}
+footer.site .ig:hover {
+  color: var(--rust);
+}
 footer.site .cargo {
   margin-left: auto;
   font-style: italic;
