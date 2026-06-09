@@ -127,7 +127,7 @@ export function NavBar() {
             className="icon-btn"
             aria-label="My lists"
             title="My lists"
-            onClick={() => (configured && user ? go('/account') : openSignIn())}
+            onClick={() => (configured && user ? go('/lists') : openSignIn())}
           >
             <HistoryIcon />
           </button>
@@ -151,13 +151,13 @@ export function NavBar() {
                     <div className="acct-head-label">Signed in as</div>
                     <div className="acct-head-email">{user.email}</div>
                   </div>
-                  <button className="acct-item" role="menuitem" onClick={() => go('/account')}>
-                    <UserIcon size={18} />
-                    My profile
-                  </button>
-                  <button className="acct-item" role="menuitem" onClick={() => go('/account')}>
+                  <button className="acct-item" role="menuitem" onClick={() => go('/lists')}>
                     <HistoryIcon size={18} />
                     My lists
+                  </button>
+                  <button className="acct-item" role="menuitem" onClick={() => go('/account')}>
+                    <UserIcon size={18} />
+                    Account &amp; profile
                   </button>
                   <button className="acct-item" role="menuitem" onClick={() => go('/help')}>
                     <HelpIcon size={18} />

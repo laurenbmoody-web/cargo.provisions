@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
-import { useOrder } from '../lib/order';
 import { useToast } from '../components/Toast';
 import { Footer } from '../components/Footer';
 import { Spinner } from '../components/Spinner';
@@ -25,14 +24,6 @@ interface ProfileRow {
   marketing_consent: boolean;
 }
 
-interface OrderSummary {
-  id: string;
-  title: string;
-  status: string;
-  updated_at: string;
-  itemCount: number;
-}
-
 const FN_URL = (() => {
   const base = import.meta.env.VITE_SUPABASE_URL as string | undefined;
   return base ? `${base}/functions/v1/delete-account` : '';
@@ -40,12 +31,10 @@ const FN_URL = (() => {
 
 export function Account() {
   const { user, configured, signOut } = useAuth();
-  const { reload } = useOrder();
   const navigate = useNavigate();
   const toast = useToast();
 
   const [profile, setProfile] = useState<ProfileRow | null>(null);
-  const [orders, setOrders] = useState<OrderSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -54,7 +43,7 @@ export function Account() {
     if (configured && !user) navigate('/', { replace: true });
   }, [configured, user, navigate]);
 
-  const loadAll = useCallback(async () => {
+  const loadProfile = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     const { data: p } = await supabase
@@ -80,29 +69,12 @@ export function Account() {
         marketing_consent: false,
       },
     );
-    const { data: os } = await supabase
-      .from('chef_orders')
-      .select('id,title,status,updated_at')
-      .eq('user_id', user.id)
-      .order('updated_at', { ascending: false });
-    const list = (os ?? []) as Omit<OrderSummary, 'itemCount'>[];
-    const withCounts = await Promise.all(
-      list.map(async (o) => {
-        const { count } = await supabase
-          .from('chef_order_items')
-          .select('id', { count: 'exact', head: true })
-          .eq('order_id', o.id)
-          .gt('qty', 0);
-        return { ...o, itemCount: count ?? 0 };
-      }),
-    );
-    setOrders(withCounts);
     setLoading(false);
   }, [user]);
 
   useEffect(() => {
-    void loadAll();
-  }, [loadAll]);
+    void loadProfile();
+  }, [loadProfile]);
 
   const setField = <K extends keyof ProfileRow>(k: K, v: ProfileRow[K]) =>
     setProfile((p) => (p ? { ...p, [k]: v } : p));
@@ -146,79 +118,12 @@ export function Account() {
     toast(error ? error.message : next ? 'Marketing consent on' : 'Marketing consent off');
   };
 
-  /* ---------- order actions ---------- */
-  const renameOrder = async (o: OrderSummary) => {
-    const title = window.prompt('Rename list', o.title);
-    if (title == null) return;
-    await supabase.from('chef_orders').update({ title: title.trim() || 'Provisions list' }).eq('id', o.id);
-    void loadAll();
+  /* ---------- account actions ---------- */
+  const logOut = async () => {
+    await signOut();
+    navigate('/', { replace: true });
   };
 
-  const setStatus = async (o: OrderSummary, status: 'open' | 'saved' | 'sent') => {
-    if (status === 'open') {
-      // One open order at a time: archive any current open order first.
-      await supabase
-        .from('chef_orders')
-        .update({ status: 'saved' })
-        .eq('user_id', user!.id)
-        .eq('status', 'open');
-    }
-    await supabase.from('chef_orders').update({ status }).eq('id', o.id);
-    await loadAll();
-    reload();
-    if (status === 'open') {
-      toast('List opened — find it on the catalogue');
-      navigate('/');
-    }
-  };
-
-  const duplicateOrder = async (o: OrderSummary) => {
-    if (!user) return;
-    const { data: created, error } = await supabase
-      .from('chef_orders')
-      .insert({ user_id: user.id, title: `${o.title} (copy)`, status: 'saved' })
-      .select('id')
-      .single();
-    if (error || !created) {
-      toast('Could not duplicate');
-      return;
-    }
-    const { data: items } = await supabase
-      .from('chef_order_items')
-      .select('item_key,item_name,category,cuisine,unit,qty,note,is_custom')
-      .eq('order_id', o.id);
-    if (items && items.length) {
-      await supabase
-        .from('chef_order_items')
-        .insert(items.map((it) => ({ ...it, order_id: created.id })));
-    }
-    void loadAll();
-    toast('List duplicated');
-  };
-
-  const deleteOrder = async (o: OrderSummary) => {
-    if (!window.confirm(`Delete “${o.title}”? This can't be undone.`)) return;
-    await supabase.from('chef_orders').delete().eq('id', o.id);
-    await loadAll();
-    if (o.status === 'open') reload();
-    toast('List deleted');
-  };
-
-  const newOpenOrder = async () => {
-    if (!user) return;
-    await supabase
-      .from('chef_orders')
-      .update({ status: 'saved' })
-      .eq('user_id', user.id)
-      .eq('status', 'open');
-    await supabase.from('chef_orders').insert({ user_id: user.id, status: 'open' });
-    await loadAll();
-    reload();
-    toast('Started a new list');
-    navigate('/');
-  };
-
-  /* ---------- GDPR ---------- */
   const exportData = async () => {
     if (!user) return;
     const { data: prof } = await supabase.from('chef_profiles').select('*').eq('id', user.id).maybeSingle();
@@ -233,8 +138,8 @@ export function Account() {
       exported_at: new Date().toISOString(),
       account: { id: user.id, email: user.email },
       profile: prof ?? null,
-      orders: ords ?? [],
-      order_items: items,
+      lists: ords ?? [],
+      list_items: items,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
@@ -273,7 +178,7 @@ export function Account() {
   if (!configured) {
     return (
       <div className="account">
-        <h1>Account</h1>
+        <h1>Account &amp; profile</h1>
         <p style={{ color: 'var(--ink-soft)' }}>Sign-in isn't configured in this environment.</p>
         <Link className="btn" to="/">
           Back to catalogue
@@ -294,60 +199,10 @@ export function Account() {
   return (
     <>
       <div className="account">
-        <h1>Your account</h1>
+        <h1>Account &amp; profile</h1>
         <p style={{ color: 'var(--ink-soft)', marginTop: 0 }}>
-          {profile.email} · <Link to="/">Back to catalogue</Link>
+          {profile.email} · <Link to="/lists">My lists</Link> · <Link to="/">Back to catalogue</Link>
         </p>
-
-        {/* My orders */}
-        <div className="panel">
-          <h2>My lists</h2>
-          {orders.length === 0 ? (
-            <p style={{ color: 'var(--ink-soft)' }}>No saved lists yet.</p>
-          ) : (
-            orders.map((o) => (
-              <div key={o.id} className="order-card">
-                <div className="oc-main">
-                  <div className="oc-title">{o.title}</div>
-                  <div className="oc-meta">
-                    {o.itemCount} item{o.itemCount === 1 ? '' : 's'} · updated{' '}
-                    {new Date(o.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </div>
-                </div>
-                <span className={`badge ${o.status}`}>{o.status}</span>
-                {o.status !== 'open' && (
-                  <button className="btn" onClick={() => setStatus(o, 'open')}>
-                    Open
-                  </button>
-                )}
-                <button className="btn" onClick={() => renameOrder(o)}>
-                  Rename
-                </button>
-                <button className="btn" onClick={() => duplicateOrder(o)}>
-                  Duplicate
-                </button>
-                {o.status !== 'saved' && (
-                  <button className="btn" onClick={() => setStatus(o, 'saved')}>
-                    Mark saved
-                  </button>
-                )}
-                {o.status !== 'sent' && (
-                  <button className="btn" onClick={() => setStatus(o, 'sent')}>
-                    Mark sent
-                  </button>
-                )}
-                <button className="btn danger" onClick={() => deleteOrder(o)}>
-                  Delete
-                </button>
-              </div>
-            ))
-          )}
-          <div style={{ marginTop: 14 }}>
-            <button className="btn primary" onClick={newOpenOrder}>
-              Start a new list
-            </button>
-          </div>
-        </div>
 
         {/* Profile */}
         <div className="panel">
@@ -444,9 +299,9 @@ export function Account() {
           </button>
         </div>
 
-        {/* Consent + data rights */}
+        {/* Consent + account actions */}
         <div className="panel">
-          <h2>Privacy & data</h2>
+          <h2>Privacy &amp; account</h2>
           <label className="consent" style={{ color: 'var(--ink)' }}>
             <input type="checkbox" checked={profile.marketing_consent} onChange={toggleMarketing} />
             <span>Keep me posted about Cargo, the operations platform behind this tool.</span>
@@ -454,6 +309,9 @@ export function Account() {
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
             <button className="btn" onClick={exportData}>
               Export my data
+            </button>
+            <button className="btn" onClick={logOut}>
+              Log out
             </button>
             <button className="btn danger" disabled={deleting} onClick={deleteAccount}>
               {deleting ? 'Deleting…' : 'Delete my account'}
