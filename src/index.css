@@ -2515,6 +2515,10 @@ footer.site .cargo {
   gap: 8px;
   align-items: stretch;
 }
+.ea-row > .ea-btn,
+.ea-row > .ea-dl {
+  flex: 1;
+}
 .ea-btn {
   display: inline-flex;
   align-items: center;
@@ -2535,7 +2539,7 @@ footer.site .cargo {
   border-color: var(--navy);
 }
 .ea-btn.primary {
-  flex: 1;
+  width: 100%;
   background: var(--navy);
   color: #fff;
   border-color: var(--navy);
@@ -2545,6 +2549,9 @@ footer.site .cargo {
 }
 .ea-dl {
   position: relative;
+}
+.ea-dl > .ea-btn {
+  width: 100%;
 }
 .ea-menu {
   position: absolute;
@@ -2582,17 +2589,6 @@ footer.site .cargo {
 }
 .ea-menu-item:hover {
   background: var(--paper);
-}
-.ea-sig {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 11.5px;
-  color: var(--ink-soft);
-  cursor: pointer;
-}
-.ea-sig input {
-  flex: none;
 }
 
 @media print {
