@@ -5,13 +5,14 @@ import { useOrderDrawer, useSignIn } from '../lib/ui';
 import { groupActive } from '../lib/activeList';
 import { useActiveListActions } from '../lib/useActiveListActions';
 import { ListItemRow } from './ListItemRow';
+import { ExportButtons } from './ExportButtons';
 
 export function OrderDrawer() {
   const { lines, notes, count, title, setTitle, orderId, isDbMode, saveStatus, setQty, setUnit, setNote, removeLine } =
     useOrder();
   const { drawerOpen: open, closeDrawer } = useOrderDrawer();
   const { openSignIn } = useSignIn();
-  const { doCopy, doCsv, doPrint, doClear } = useActiveListActions();
+  const { promptSent, doClear } = useActiveListActions();
   const navigate = useNavigate();
 
   const grouped = useMemo(() => groupActive(lines, notes), [lines, notes]);
@@ -108,17 +109,7 @@ export function OrderDrawer() {
               Sign in to save this list
             </button>
           )}
-          <div className="actions">
-            <button className="primary" onClick={doCopy}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="9" y="9" width="11" height="11" rx="2" />
-                <path d="M5 15V5a2 2 0 0 1 2-2h10" />
-              </svg>
-              Copy list (for WhatsApp / email)
-            </button>
-            <button onClick={doCsv}>Export CSV</button>
-            <button onClick={doPrint}>Print</button>
-          </div>
+          <ExportButtons title={title} groups={grouped} count={count} onExported={promptSent} />
           <button className="clear-link" onClick={doClear}>
             Clear list
           </button>

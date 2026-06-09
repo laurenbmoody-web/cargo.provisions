@@ -7,18 +7,11 @@ import { useToast } from '../components/Toast';
 import { Footer } from '../components/Footer';
 import { Spinner } from '../components/Spinner';
 import { ListItemRow } from '../components/ListItemRow';
+import { ExportButtons } from '../components/ExportButtons';
 import { groupActive } from '../lib/activeList';
 import { useActiveListActions } from '../lib/useActiveListActions';
-import {
-  groupRows,
-  countRows,
-  listText,
-  listCsv,
-  listPrintHtml,
-  downloadCsv,
-  copyText,
-  type ExportRow,
-} from '../lib/listExport';
+import { LISTS_UPDATED_EVENT } from '../lib/order';
+import { groupRows, countRows, type ExportRow } from '../lib/listExport';
 
 export function ListView() {
   const { id } = useParams();
@@ -130,15 +123,7 @@ export function ListView() {
 
         <div className="lv-bar">
           <div className="wrap lv-bar-inner">
-            <button className="btn primary" onClick={actions.doCopy}>
-              Copy
-            </button>
-            <button className="btn" onClick={actions.doCsv}>
-              CSV
-            </button>
-            <button className="btn" onClick={actions.doPrint}>
-              Print
-            </button>
+            <ExportButtons title={order.title} groups={grouped} count={order.count} onExported={actions.promptSent} />
           </div>
         </div>
         <Footer />
@@ -183,32 +168,9 @@ export function ListView() {
     if (window.confirm('Mark this list as sent?')) {
       await supabase.from('chef_orders').update({ status: 'sent' }).eq('id', id!);
       setMeta({ ...meta, status: 'sent' });
+      window.dispatchEvent(new Event(LISTS_UPDATED_EVENT));
       toast('Marked as sent');
     }
-  };
-  const doCopy = async () => {
-    if (!count) return toast('This list is empty');
-    const ok = await copyText(listText(meta.title, groups, count));
-    toast(ok ? 'Copied — paste into WhatsApp or email' : 'Copy failed');
-    await promptSent();
-  };
-  const doCsv = async () => {
-    if (!count) return toast('This list is empty');
-    downloadCsv(
-      `${meta.title.replace(/[^a-z0-9]+/gi, '-').toLowerCase() || 'list'}-${new Date().toISOString().slice(0, 10)}.csv`,
-      listCsv(groups),
-    );
-    toast('CSV downloaded');
-    await promptSent();
-  };
-  const doPrint = async () => {
-    if (!count) return toast('This list is empty');
-    const pa = document.getElementById('printArea');
-    if (pa) {
-      pa.innerHTML = listPrintHtml(meta.title, groups, count);
-      window.print();
-    }
-    await promptSent();
   };
 
   const openOnCatalogue = async () => {
@@ -261,15 +223,7 @@ export function ListView() {
 
       <div className="lv-bar">
         <div className="wrap lv-bar-inner">
-          <button className="btn primary" onClick={doCopy}>
-            Copy
-          </button>
-          <button className="btn" onClick={doCsv}>
-            CSV
-          </button>
-          <button className="btn" onClick={doPrint}>
-            Print
-          </button>
+          <ExportButtons title={meta.title} groups={groups} count={count} onExported={promptSent} />
         </div>
       </div>
       <Footer />
