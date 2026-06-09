@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { CUISINES, CUISINE_LABEL } from '../data/catalogue';
+import { useClampX } from '../lib/useClampX';
 
 const CheckIcon = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -37,6 +38,10 @@ export function CuisineFilter({
   const toggle = (code: string) =>
     onChange(selected.includes(code) ? selected.filter((c) => c !== code) : [...selected, code]);
 
+  // clamp the desktop popover within the viewport (mobile is a full-width sheet)
+  const isDesktop = typeof window !== 'undefined' && window.innerWidth > 640;
+  const menuRef = useClampX<HTMLDivElement>(open, isDesktop);
+
   return (
     <div className="cuisine-filter">
       <button
@@ -52,7 +57,7 @@ export function CuisineFilter({
       {open && (
         <>
           <div className="sheet-scrim" onClick={() => setOpen(false)} />
-          <div className="cuisine-menu" role="dialog" aria-label="Filter by cuisine">
+          <div className="cuisine-menu" role="dialog" aria-label="Filter by cuisine" ref={menuRef}>
             <div className="cuisine-menu-head">
               <span>Filter by cuisine</span>
               <button className="link-btn" onClick={() => onChange([])} disabled={count === 0}>

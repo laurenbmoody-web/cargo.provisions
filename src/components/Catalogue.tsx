@@ -7,6 +7,7 @@ import { logSearchMiss } from '../lib/analytics';
 import { useToast } from './Toast';
 import { ItemRow, type CatItem } from './ItemRow';
 import { CuisineFilter } from './CuisineFilter';
+import { useClampX } from '../lib/useClampX';
 
 interface CatModel {
   name: string;
@@ -107,6 +108,7 @@ export function Catalogue() {
   );
   const [jumpOpen, setJumpOpen] = useState(false);
   const jumpRef = useRef<HTMLDivElement>(null);
+  const jumpMenuRef = useClampX<HTMLDivElement>(jumpOpen);
   useEffect(() => {
     if (!jumpOpen) return;
     const onDoc = (e: MouseEvent) => {
@@ -175,7 +177,7 @@ export function Catalogue() {
                 Jump to <span className="caret-sm" aria-hidden="true">▾</span>
               </button>
               {jumpOpen && (
-                <div className="jumpto-menu" role="menu">
+                <div className="jumpto-menu" role="menu" ref={jumpMenuRef}>
                   {groupCounts.map(({ group, count }) => (
                     <button
                       key={group}
