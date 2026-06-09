@@ -141,7 +141,7 @@ export function brandedPrintHtml(
       }</span><span>${esc(it.unit || '')}</span></div>`;
     }
   }
-  h += `<div class="pa-foot">Built with Cargo Provisions · cargoprovisions.netlify.app</div>`;
+  h += `<div class="pa-foot">Built with Cargo Provisions · provisions.cargotechnology.co.uk</div>`;
   return h;
 }
 

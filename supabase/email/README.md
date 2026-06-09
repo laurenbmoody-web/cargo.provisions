@@ -36,7 +36,7 @@ them, so paste the same `magic-link.html` body into **both** (the copy —
   - Subject: `Your Cargo Provisions sign-in link`
 
 Both templates expose `{{ .ConfirmationURL }}`, which the template uses. The
-header logo loads from `https://cargoprovisions.netlify.app/email-logo.png`
+header logo loads from `https://provisions.cargotechnology.co.uk/email-logo.png`
 (must be deployed for the image to appear — regenerate with
 `node scripts/build-email-logo.mjs`).
 
