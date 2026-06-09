@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
 import { CONSENT_VERSION, ROLES, VESSEL_TYPES, USAGE_TYPES } from '../lib/constants';
+import { notifyProfileUpdated } from '../lib/profile';
 
 export function Onboarding({ onDone }: { onDone: () => void }) {
   const { user } = useAuth();
@@ -61,6 +62,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
       setError(err.message);
       return;
     }
+    notifyProfileUpdated();
     onDone();
   };
 

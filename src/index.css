@@ -266,6 +266,90 @@ header.top h1 em {
 .acct {
   position: relative;
 }
+
+/* Profile-completion nudge: terracotta ring + dot around the avatar */
+.avatar-wrap {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nudge-ring {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+.nudge-ring-track {
+  fill: none;
+  stroke: var(--rust-soft);
+  stroke-width: 2.5;
+}
+.nudge-ring-prog {
+  fill: none;
+  stroke: var(--rust);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.45s ease;
+}
+.nudge-dot {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--rust);
+  border: 2px solid var(--card);
+  pointer-events: none;
+}
+.nudge-pill {
+  display: inline-flex;
+  align-items: center;
+  background: var(--rust-soft);
+  border: 1px solid #e7cdbb;
+  border-radius: 30px;
+  padding-right: 4px;
+  max-width: 340px;
+}
+.nudge-pill-main {
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--rust);
+  cursor: pointer;
+  padding: 7px 4px 7px 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nudge-pill-x {
+  flex: none;
+  background: none;
+  border: none;
+  color: var(--rust);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  padding: 6px 7px;
+  border-radius: 50%;
+  opacity: 0.7;
+}
+.nudge-pill-x:hover {
+  opacity: 1;
+  background: rgba(198, 90, 26, 0.12);
+}
+/* Pill is desktop-only; the ring + dot carry the nudge on smaller screens */
+@media (max-width: 1024px) {
+  .nudge-pill {
+    display: none;
+  }
+}
+
 /* Logged-out: direct 'Sign in' outline pill */
 .signin-pill {
   display: inline-flex;

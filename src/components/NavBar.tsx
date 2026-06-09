@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import { useOrder } from '../lib/order';
 import { useSignIn, useSearch, useOrderDrawer } from '../lib/ui';
+import { supabase } from '../lib/supabase';
+import { PROFILE_FIELDS, PROFILE_UPDATED_EVENT, profileCompletion } from '../lib/profile';
 
 /* Modern, consistent line icons (1.75 stroke, rounded). */
 const HistoryIcon = ({ size = 21 }: { size?: number }) => (
@@ -80,6 +82,58 @@ export function NavBar() {
 
   const initial = (user?.email ?? '?').charAt(0).toUpperCase();
 
+  // ---- Profile-completion nudge (encouragement only; never re-nags) ----
+  const [pct, setPct] = useState<number | null>(null); // null = not loaded yet
+  const [complete, setComplete] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+  const dismissKey = user ? `provisions:nudge-dismissed:${user.id}` : '';
+
+  useEffect(() => {
+    if (!user) {
+      setPct(null);
+      setComplete(false);
+      setDismissed(false);
+      return;
+    }
+    try {
+      setDismissed(window.localStorage.getItem(`provisions:nudge-dismissed:${user.id}`) === '1');
+    } catch {
+      /* ignore */
+    }
+    let cancelled = false;
+    const fetchCompletion = async () => {
+      const { data } = await supabase
+        .from('chef_profiles')
+        .select(PROFILE_FIELDS.join(','))
+        .eq('id', user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      const c = profileCompletion(data as Record<string, unknown> | null);
+      setPct(c.pct);
+      setComplete(c.complete);
+    };
+    void fetchCompletion();
+    const onUpdated = () => void fetchCompletion();
+    window.addEventListener(PROFILE_UPDATED_EVENT, onUpdated);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(PROFILE_UPDATED_EVENT, onUpdated);
+    };
+  }, [user]);
+
+  const showNudge = !!user && pct !== null && !complete && !dismissed;
+  const dismissNudge = () => {
+    setDismissed(true);
+    try {
+      if (dismissKey) window.localStorage.setItem(dismissKey, '1');
+    } catch {
+      /* ignore */
+    }
+  };
+
+  // terracotta progress ring geometry (r = 21, around a 40px avatar)
+  const RING_C = 2 * Math.PI * 21;
+
   const go = (path: string) => {
     setMenuOpen(false);
     navigate(path);
@@ -132,18 +186,45 @@ export function NavBar() {
             <HistoryIcon />
           </button>
 
+          {/* Profile-completion nudge pill (desktop, benefit-framed, dismissible) */}
+          {showNudge && (
+            <div className="nudge-pill">
+              <button className="nudge-pill-main" onClick={() => go('/account')}>
+                Add your vessel for pack sizes that fit your crew
+              </button>
+              <button className="nudge-pill-x" aria-label="Dismiss" onClick={dismissNudge}>
+                ✕
+              </button>
+            </div>
+          )}
+
           {/* Account — dropdown when signed in, direct 'Sign in' button when not */}
           {user ? (
             <div className="acct" ref={menuRef}>
-              <button
-                className="acct-btn signed-in"
-                aria-label="Account"
-                aria-haspopup="menu"
-                aria-expanded={menuOpen}
-                onClick={() => setMenuOpen((o) => !o)}
-              >
-                <span className="avatar">{initial}</span>
-              </button>
+              <div className="avatar-wrap">
+                {showNudge && (
+                  <svg className="nudge-ring" width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
+                    <circle className="nudge-ring-track" cx="22" cy="22" r="21" />
+                    <circle
+                      className="nudge-ring-prog"
+                      cx="22"
+                      cy="22"
+                      r="21"
+                      style={{ strokeDasharray: RING_C, strokeDashoffset: RING_C * (1 - (pct ?? 0) / 100) }}
+                    />
+                  </svg>
+                )}
+                <button
+                  className="acct-btn signed-in"
+                  aria-label={showNudge ? `Account — profile ${pct}% complete` : 'Account'}
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  onClick={() => setMenuOpen((o) => !o)}
+                >
+                  <span className="avatar">{initial}</span>
+                </button>
+                {showNudge && <span className="nudge-dot" aria-hidden="true" />}
+              </div>
 
               {menuOpen && (
                 <div className="acct-menu" role="menu">
