@@ -19,6 +19,7 @@
   --radius-sm: 9px;
   --shadow: 0 1px 2px rgba(35, 38, 47, 0.04), 0 8px 24px rgba(35, 38, 47, 0.06);
   --maxw: 1180px;
+  --nav-h: 66px; /* sticky nav-bar height; the catalogue toolbar sticks below it */
 }
 
 * {
@@ -100,6 +101,9 @@ header.top h1 em {
 
 /* ---------- Top nav bar ---------- */
 .navbar {
+  position: sticky;
+  top: 0;
+  z-index: 55;
   background: var(--card);
   border-bottom: 1px solid var(--line);
   box-shadow: 0 1px 8px rgba(35, 38, 47, 0.04);
@@ -449,6 +453,10 @@ header.top h1 em {
 }
 
 @media (max-width: 640px) {
+  /* Two-row nav (search wraps below) is taller — offset the sticky toolbar. */
+  :root {
+    --nav-h: 108px;
+  }
   /* Two-row nav: [logo .... actions] then a full-width search below. */
   .navbar-inner {
     height: auto;
@@ -505,7 +513,7 @@ header.top h1 em {
 /* ---------- Toolbar (sticky) ---------- */
 .toolbar {
   position: sticky;
-  top: 0;
+  top: var(--nav-h);
   z-index: 40;
   background: rgba(245, 242, 236, 0.92);
   backdrop-filter: blur(8px);

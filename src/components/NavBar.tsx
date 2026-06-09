@@ -86,7 +86,6 @@ export function NavBar() {
   const [pct, setPct] = useState<number | null>(null); // null = not loaded yet
   const [complete, setComplete] = useState(false);
   const [dismissed, setDismissed] = useState(false);
-  const dismissKey = user ? `provisions:nudge-dismissed:${user.id}` : '';
 
   useEffect(() => {
     if (!user) {
@@ -122,14 +121,6 @@ export function NavBar() {
   }, [user]);
 
   const showNudge = !!user && pct !== null && !complete && !dismissed;
-  const dismissNudge = () => {
-    setDismissed(true);
-    try {
-      if (dismissKey) window.localStorage.setItem(dismissKey, '1');
-    } catch {
-      /* ignore */
-    }
-  };
 
   // terracotta progress ring geometry (r = 21, around a 40px avatar)
   const RING_C = 2 * Math.PI * 21;
@@ -185,18 +176,6 @@ export function NavBar() {
           >
             <HistoryIcon />
           </button>
-
-          {/* Profile-completion nudge pill (desktop, benefit-framed, dismissible) */}
-          {showNudge && (
-            <div className="nudge-pill">
-              <button className="nudge-pill-main" onClick={() => go('/account')}>
-                Add your vessel for pack sizes that fit your crew
-              </button>
-              <button className="nudge-pill-x" aria-label="Dismiss" onClick={dismissNudge}>
-                ✕
-              </button>
-            </div>
-          )}
 
           {/* Account — dropdown when signed in, direct 'Sign in' button when not */}
           {user ? (
