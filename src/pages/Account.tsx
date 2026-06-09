@@ -198,6 +198,9 @@ export function Account() {
     );
   }
 
+  const provider = (user?.app_metadata?.provider as string | undefined) ?? 'email';
+  const signInMethod = provider === 'google' ? 'Google' : provider === 'email' ? 'Email link' : provider;
+
   return (
     <>
       <div className="account">
@@ -304,6 +307,9 @@ export function Account() {
         {/* Consent + account actions */}
         <div className="panel">
           <h2>Privacy &amp; account</h2>
+          <p className="acct-identity">
+            Account · <strong>{user?.email}</strong> · {signInMethod}
+          </p>
           <label className="consent" style={{ color: 'var(--ink)' }}>
             <input type="checkbox" checked={profile.marketing_consent} onChange={toggleMarketing} />
             <span>Keep me posted about Cargo, the operations platform behind this tool.</span>
