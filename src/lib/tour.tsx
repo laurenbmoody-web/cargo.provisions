@@ -26,6 +26,9 @@ const reduceMotion = () =>
 
 const seenKey = (uid?: string) => (uid ? `provisions:tour-seen:${uid}` : 'provisions:tour-seen');
 
+// Give a brand-new user time to look around before the tour auto-starts.
+const TOUR_DELAY_MS = 60000;
+
 const TourContext = createContext<{ startTour: () => void }>({ startTour: () => {} });
 export const useTour = () => useContext(TourContext);
 
@@ -53,6 +56,15 @@ export function TourProvider({ children }: { children: ReactNode }) {
   });
   const cardRef = useRef<HTMLDivElement>(null);
   const autoStarted = useRef(false);
+  const tourTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // live refs so the delayed auto-start can re-check conditions when it fires
+  const countRef = useRef(count);
+  const pathRef = useRef(location.pathname);
+  const activeRef = useRef(active);
+  countRef.current = count;
+  pathRef.current = location.pathname;
+  activeRef.current = active;
 
   const expandFirstCategory = useCallback(() => {
     const cat = document.querySelector('main.catalogue .cat');
@@ -192,6 +204,11 @@ export function TourProvider({ children }: { children: ReactNode }) {
   }, [closeDrawer, user]);
 
   const begin = useCallback(() => {
+    if (tourTimer.current) {
+      clearTimeout(tourTimer.current);
+      tourTimer.current = null;
+    }
+    autoStarted.current = true;
     setStep(0);
     setRect(null);
     setActive(true);
@@ -206,7 +223,9 @@ export function TourProvider({ children }: { children: ReactNode }) {
     }
   }, [location.pathname, navigate, begin]);
 
-  // auto-start: new user, first session (empty list), not seen yet, on catalogue
+  // auto-start: new user, first session (empty list), not seen yet, on catalogue.
+  // Waits TOUR_DELAY_MS so they can look around first; cancels if they start a
+  // list or navigate away.
   useEffect(() => {
     if (autoStarted.current || !ready || active) return;
     if (location.pathname !== '/' || count !== 0) return;
@@ -229,10 +248,18 @@ export function TourProvider({ children }: { children: ReactNode }) {
           .maybeSingle();
         if (data && (data as { tour_seen_at?: string }).tour_seen_at) seen = true;
       }
-      if (!cancelled && !seen) begin();
+      if (cancelled || seen) return;
+      tourTimer.current = setTimeout(() => {
+        // re-check at fire time — only nudge an idle, still-empty visitor
+        if (countRef.current === 0 && pathRef.current === '/' && !activeRef.current) begin();
+      }, TOUR_DELAY_MS);
     })();
     return () => {
       cancelled = true;
+      if (tourTimer.current) {
+        clearTimeout(tourTimer.current);
+        tourTimer.current = null;
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, count, user, location.pathname]);
