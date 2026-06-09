@@ -91,7 +91,8 @@ export function ListView() {
               }}
               onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
             />
-            <span className="badge open">Active</span>
+            <span className="badge open">Open</span>
+            <span className="current-tag">Current</span>
           </div>
 
           {grouped.length === 0 ? (
@@ -235,7 +236,7 @@ export function ListView() {
             onBlur={renameStatic}
             onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
           />
-          {sent && <span className="badge sent">Sent</span>}
+          {sent ? <span className="badge sent">Sent</span> : <span className="badge open">Open</span>}
         </div>
 
         {count === 0 ? (
