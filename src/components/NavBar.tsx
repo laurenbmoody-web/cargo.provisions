@@ -107,11 +107,11 @@ export function NavBar() {
           {/* Order list (opens the order drawer) */}
           <button
             className="order-pill"
-            aria-label={`View order (${count} item${count === 1 ? '' : 's'})`}
+            aria-label={`View list (${count} item${count === 1 ? '' : 's'})`}
             onClick={openDrawer}
           >
             <ClipboardListIcon size={18} />
-            <span className="order-pill-label">Order</span>
+            <span className="order-pill-label">List</span>
             {count > 0 && <span className="order-count">{count}</span>}
           </button>
 
