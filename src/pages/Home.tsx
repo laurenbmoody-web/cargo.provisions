@@ -22,13 +22,16 @@ export function Home() {
       setNeedsOnboarding(false);
       return;
     }
+    // Show onboarding until the user has accepted terms (captures consent).
+    // Keyed on terms_accepted_at, not mere row existence, so it still works
+    // even if a DB trigger pre-creates a bare profile row.
     supabase
       .from('chef_profiles')
-      .select('id')
+      .select('terms_accepted_at')
       .eq('id', user.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (!cancelled) setNeedsOnboarding(!data);
+        if (!cancelled) setNeedsOnboarding(!data || !data.terms_accepted_at);
       });
     return () => {
       cancelled = true;
@@ -43,21 +46,21 @@ export function Home() {
             What are we <em>ordering</em>?
           </h1>
           <div className="sub">
-            The simple provisioning list for superyacht chefs — build your order and send it off.
+            The simple provisioning list for superyacht chefs — build your list and send it off.
           </div>
         </div>
       </header>
 
       <Catalogue />
 
-      {/* Low-pressure save prompt once the order has items and you're signed out */}
+      {/* Low-pressure save prompt once the list has items and you're signed out */}
       {configured && !user && count > 0 && (
         <div className="wrap">
           <div className="signin-prompt">
             <span className="grow">
-              Building an order? Sign in to save it and pick it up on any device.
+              Building a list? Sign in to save it and pick it up on any device.
             </span>
-            <button onClick={openSignIn}>Save order</button>
+            <button onClick={openSignIn}>Save list</button>
           </div>
         </div>
       )}
@@ -68,9 +71,9 @@ export function Home() {
       <div className="fab">
         <div className="wrap">
           <div className="lbl">
-            <b>{count}</b> {count === 1 ? 'item' : 'items'} in order
+            <b>{count}</b> {count === 1 ? 'item' : 'items'} in your list
           </div>
-          <button onClick={openDrawer}>View order</button>
+          <button onClick={openDrawer}>View list</button>
         </div>
       </div>
 

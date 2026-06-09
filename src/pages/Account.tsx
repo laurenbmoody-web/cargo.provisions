@@ -148,9 +148,9 @@ export function Account() {
 
   /* ---------- order actions ---------- */
   const renameOrder = async (o: OrderSummary) => {
-    const title = window.prompt('Rename order', o.title);
+    const title = window.prompt('Rename list', o.title);
     if (title == null) return;
-    await supabase.from('chef_orders').update({ title: title.trim() || 'Provisions order' }).eq('id', o.id);
+    await supabase.from('chef_orders').update({ title: title.trim() || 'Provisions list' }).eq('id', o.id);
     void loadAll();
   };
 
@@ -167,7 +167,7 @@ export function Account() {
     await loadAll();
     reload();
     if (status === 'open') {
-      toast('Order opened — find it on the catalogue');
+      toast('List opened — find it on the catalogue');
       navigate('/');
     }
   };
@@ -193,7 +193,7 @@ export function Account() {
         .insert(items.map((it) => ({ ...it, order_id: created.id })));
     }
     void loadAll();
-    toast('Order duplicated');
+    toast('List duplicated');
   };
 
   const deleteOrder = async (o: OrderSummary) => {
@@ -201,7 +201,7 @@ export function Account() {
     await supabase.from('chef_orders').delete().eq('id', o.id);
     await loadAll();
     if (o.status === 'open') reload();
-    toast('Order deleted');
+    toast('List deleted');
   };
 
   const newOpenOrder = async () => {
@@ -214,7 +214,7 @@ export function Account() {
     await supabase.from('chef_orders').insert({ user_id: user.id, status: 'open' });
     await loadAll();
     reload();
-    toast('Started a new order');
+    toast('Started a new list');
     navigate('/');
   };
 
@@ -247,7 +247,7 @@ export function Account() {
 
   const deleteAccount = async () => {
     if (!user) return;
-    if (!window.confirm('Permanently delete your account and all your orders? This cannot be undone.'))
+    if (!window.confirm('Permanently delete your account and all your lists? This cannot be undone.'))
       return;
     setDeleting(true);
     try {
@@ -301,9 +301,9 @@ export function Account() {
 
         {/* My orders */}
         <div className="panel">
-          <h2>My orders</h2>
+          <h2>My lists</h2>
           {orders.length === 0 ? (
-            <p style={{ color: 'var(--ink-soft)' }}>No saved orders yet.</p>
+            <p style={{ color: 'var(--ink-soft)' }}>No saved lists yet.</p>
           ) : (
             orders.map((o) => (
               <div key={o.id} className="order-card">
@@ -344,7 +344,7 @@ export function Account() {
           )}
           <div style={{ marginTop: 14 }}>
             <button className="btn primary" onClick={newOpenOrder}>
-              Start a new order
+              Start a new list
             </button>
           </div>
         </div>
@@ -460,7 +460,7 @@ export function Account() {
             </button>
           </div>
           <p style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 12 }}>
-            Export downloads a JSON of your profile and all your orders. Deleting your account removes
+            Export downloads a JSON of your profile and all your lists. Deleting your account removes
             everything permanently. See our <Link to="/privacy">Privacy Policy</Link>.
           </p>
         </div>

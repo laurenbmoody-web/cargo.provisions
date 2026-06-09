@@ -24,8 +24,8 @@ export function Privacy() {
 
         <h2>What this tool does</h2>
         <p>
-          You can browse our provisions catalogue and build an order without an account. If you
-          create an account, we save your orders so you can return to them on any device.
+          You can browse our provisions catalogue and build a list without an account. If you
+          create an account, we save your lists so you can return to them on any device.
         </p>
 
         <h2>What we collect</h2>
@@ -40,7 +40,7 @@ export function Privacy() {
             or private use) and phone number. These are optional and used to tailor the tool.
           </li>
           <li>
-            <em>Your orders:</em> the items, quantities, units and notes you save.
+            <em>Your lists:</em> the items, quantities, units and notes you save.
           </li>
           <li>
             <em>Product analytics:</em> items you add that aren't in our catalogue, and searches that
@@ -48,13 +48,13 @@ export function Privacy() {
           </li>
           <li>
             <em>Technical:</em> essential cookies/local storage to keep you signed in and to hold
-            your in-progress order. We don't use advertising or third-party tracking cookies.
+            your in-progress list. We don't use advertising or third-party tracking cookies.
           </li>
         </ul>
 
         <h2>Why, and our legal basis</h2>
         <p>
-          We process your account, profile and order data to provide the service you've asked for,
+          We process your account, profile and list data to provide the service you've asked for,
           and we rely on our legitimate interest to keep the catalogue and tool improving. We only
           send you marketing about Cargo's wider products if you've given consent — a separate,
           optional opt-in you can withdraw at any time in your account.
@@ -82,7 +82,7 @@ export function Privacy() {
 
         <h2>How long we keep it</h2>
         <p>
-          We keep your account, profile and orders while your account is active. If you delete your
+          We keep your account, profile and lists while your account is active. If you delete your
           account, we delete this data. We may remove accounts that have been inactive for 24 months.
         </p>
 

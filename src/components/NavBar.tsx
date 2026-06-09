@@ -32,6 +32,13 @@ const SignOutIcon = ({ size = 18 }: { size?: number }) => (
     <path d="M21 12H9" />
   </svg>
 );
+const LogInIcon = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+    <polyline points="10 17 15 12 10 7" />
+    <line x1="15" x2="3" y1="12" y2="12" />
+  </svg>
+);
 // lucide clipboard-list — an order list, not a checkout cart
 const ClipboardListIcon = ({ size = 18 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -118,85 +125,65 @@ export function NavBar() {
           {/* Order history */}
           <button
             className="icon-btn"
-            aria-label="Order history"
-            title="Order history"
+            aria-label="My lists"
+            title="My lists"
             onClick={() => (configured && user ? go('/account') : openSignIn())}
           >
             <HistoryIcon />
           </button>
 
-          {/* Account */}
-          <div className="acct" ref={menuRef}>
-            <button
-              className={`acct-btn${user ? ' signed-in' : ''}`}
-              aria-label="Account"
-              aria-haspopup="menu"
-              aria-expanded={menuOpen}
-              onClick={() => setMenuOpen((o) => !o)}
-            >
-              {user ? <span className="avatar">{initial}</span> : <UserIcon size={22} />}
-            </button>
+          {/* Account — dropdown when signed in, direct 'Sign in' button when not */}
+          {user ? (
+            <div className="acct" ref={menuRef}>
+              <button
+                className="acct-btn signed-in"
+                aria-label="Account"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen((o) => !o)}
+              >
+                <span className="avatar">{initial}</span>
+              </button>
 
-            {menuOpen && (
-              <div className="acct-menu" role="menu">
-                {!configured ? (
-                  <div className="acct-note">Sign-in isn't configured yet.</div>
-                ) : user ? (
-                  <>
-                    <div className="acct-head">
-                      <div className="acct-head-label">Signed in as</div>
-                      <div className="acct-head-email">{user.email}</div>
-                    </div>
-                    <button className="acct-item" role="menuitem" onClick={() => go('/account')}>
-                      <UserIcon size={18} />
-                      My profile
-                    </button>
-                    <button className="acct-item" role="menuitem" onClick={() => go('/account')}>
-                      <HistoryIcon size={18} />
-                      Order history
-                    </button>
-                    <button className="acct-item" role="menuitem" onClick={() => go('/help')}>
-                      <HelpIcon size={18} />
-                      Help
-                    </button>
-                    <div className="acct-divider" />
-                    <button
-                      className="acct-item"
-                      role="menuitem"
-                      onClick={() => {
-                        setMenuOpen(false);
-                        void signOut();
-                      }}
-                    >
-                      <SignOutIcon size={18} />
-                      Sign out
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      className="acct-item primary"
-                      role="menuitem"
-                      onClick={() => {
-                        setMenuOpen(false);
-                        openSignIn();
-                      }}
-                    >
-                      Log in or sign up
-                    </button>
-                    <div className="acct-note">
-                      Browse freely — sign in only to save your order across devices.
-                    </div>
-                    <div className="acct-divider" />
-                    <Link className="acct-item" role="menuitem" to="/help" onClick={() => setMenuOpen(false)}>
-                      <HelpIcon size={18} />
-                      Help &amp; FAQ
-                    </Link>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
+              {menuOpen && (
+                <div className="acct-menu" role="menu">
+                  <div className="acct-head">
+                    <div className="acct-head-label">Signed in as</div>
+                    <div className="acct-head-email">{user.email}</div>
+                  </div>
+                  <button className="acct-item" role="menuitem" onClick={() => go('/account')}>
+                    <UserIcon size={18} />
+                    My profile
+                  </button>
+                  <button className="acct-item" role="menuitem" onClick={() => go('/account')}>
+                    <HistoryIcon size={18} />
+                    My lists
+                  </button>
+                  <button className="acct-item" role="menuitem" onClick={() => go('/help')}>
+                    <HelpIcon size={18} />
+                    Help
+                  </button>
+                  <div className="acct-divider" />
+                  <button
+                    className="acct-item"
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      void signOut();
+                    }}
+                  >
+                    <SignOutIcon size={18} />
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button className="signin-pill" onClick={openSignIn}>
+              <LogInIcon size={18} />
+              <span className="signin-pill-label">Sign in</span>
+            </button>
+          )}
         </div>
       </div>
     </nav>

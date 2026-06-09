@@ -18,11 +18,11 @@ const SECTIONS: Section[] = [
     items: [
       {
         q: 'Is it free?',
-        a: 'Yes — completely free to browse, build an order, and send it off.',
+        a: 'Yes — completely free to browse, build a list, and send it off.',
       },
       {
         q: 'Do I need an account?',
-        a: "No. Browse the full catalogue and build an order straight away. You only sign in if you want to save it and come back to it later, on any device. Without an account your order is saved only on the device you're using — so sign in (or export it) if you don't want to risk losing it.",
+        a: "No. Browse the full catalogue and build a list straight away. You only sign in if you want to save it and come back to it later, on any device. Without an account your list is saved only on the device you're using — so sign in (or export it) if you don't want to risk losing it.",
       },
       {
         q: 'How do I sign in?',
@@ -31,7 +31,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    title: 'Building an order',
+    title: 'Building a list',
     items: [
       {
         q: 'Can I change the unit or pack size?',
@@ -43,19 +43,19 @@ const SECTIONS: Section[] = [
       },
       {
         q: "What's a note for?",
-        a: 'Tap the note icon on any item to specify a cut, ripeness, brand or anything else for your supplier — it travels with the order in every export.',
+        a: 'Tap the note icon on any item to specify a cut, ripeness, brand or anything else for your supplier — it travels with the list in every export.',
       },
       {
-        q: 'Can I have more than one order?',
-        a: 'Yes. Keep your current order on the go, and find past ones any time under My orders.',
+        q: 'Can I have more than one list?',
+        a: 'Yes. Keep your current list on the go, and find past ones any time under My lists.',
       },
       {
-        q: 'How do I send my order to a supplier?',
-        a: 'Open the order panel and tap Copy for a clean, grouped list to paste into WhatsApp or email, Export CSV for a spreadsheet, or Print for a paper pick-list.',
+        q: 'How do I send my list to a supplier?',
+        a: 'Open the list panel and tap Copy for a clean, grouped list to paste into WhatsApp or email, Export CSV for a spreadsheet, or Print for a paper pick-list.',
       },
       {
         q: 'Will my supplier be able to fulfil it?',
-        a: 'This is a reference list to help you build and send your order. Availability, pricing, seasonality and exact specifications are always between you and your supplier — worth confirming with them directly.',
+        a: 'This is a reference list to help you build and send your provisions. Availability, pricing, seasonality and exact specifications are always between you and your supplier — worth confirming with them directly.',
       },
     ],
   },
@@ -63,8 +63,8 @@ const SECTIONS: Section[] = [
     title: 'Your account & data',
     items: [
       {
-        q: 'Can I keep an order open over several days?',
-        a: "Yes. Once you're signed in, your current order saves automatically as you go. Pick it up any time, on any device, under My orders.",
+        q: 'Can I keep a list open over several days?',
+        a: "Yes. Once you're signed in, your current list saves automatically as you go. Pick it up any time, on any device, under My lists.",
       },
       {
         q: 'Why do you ask about my vessel?',
@@ -74,10 +74,10 @@ const SECTIONS: Section[] = [
         q: 'Is my data private?',
         a: (
           <>
-            Your orders are private to you. At sign-up we ask a few optional details about your
-            galley to tailor the tool, and you choose whether you'd like to hear from Cargo — we
-            never sell your data. You can export or delete everything any time from your account.
-            See our <Link to="/privacy">Privacy Policy</Link>.
+            Your lists are private to you. At sign-up we ask a few optional details about your galley
+            to tailor the tool, and you choose whether you'd like to hear from Cargo — we never sell
+            your data. You can export or delete everything any time from your account. See our{' '}
+            <Link to="/privacy">Privacy Policy</Link>.
           </>
         ),
       },
