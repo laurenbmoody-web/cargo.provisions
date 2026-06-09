@@ -12,7 +12,7 @@ export function OrderDrawer() {
     useOrder();
   const { drawerOpen: open, closeDrawer } = useOrderDrawer();
   const { openSignIn } = useSignIn();
-  const { promptSent, doClear } = useActiveListActions();
+  const { doClear } = useActiveListActions();
   const navigate = useNavigate();
 
   const grouped = useMemo(() => groupActive(lines, notes), [lines, notes]);
@@ -109,7 +109,7 @@ export function OrderDrawer() {
               Sign in to save this list
             </button>
           )}
-          <ExportButtons title={title} groups={grouped} count={count} onExported={promptSent} />
+          <ExportButtons title={title} groups={grouped} count={count} />
           <button className="clear-link" onClick={doClear}>
             Clear list
           </button>

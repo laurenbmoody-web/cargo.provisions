@@ -311,6 +311,23 @@ header.top h1 em {
   border: 2px solid var(--card);
   pointer-events: none;
 }
+/* gentle pulse so the incomplete-profile nudge draws a glance (motion-safe) */
+@media (prefers-reduced-motion: no-preference) {
+  .nudge-dot {
+    animation: nudge-pulse 1.9s ease-in-out infinite;
+  }
+}
+@keyframes nudge-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.65;
+  }
+}
 .nudge-pill {
   display: inline-flex;
   align-items: center;

@@ -84,8 +84,9 @@ export function SignInModal({ open, onClose }: { open: boolean; onClose: () => v
   const submit = async () => {
     setError(null);
     if (!email.trim()) return setError('Enter your email address.');
-    if (TURNSTILE_SITE_KEY && !token) return setError('Please complete the bot check.');
     setSending(true);
+    // Pass the Turnstile token if the widget produced one, but never block
+    // sign-in on it (a slow/misconfigured widget shouldn't wall users out).
     const { error: err } = await signInWithEmail(email.trim(), token || undefined);
     setSending(false);
     if (err) setError(err);
