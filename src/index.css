@@ -543,6 +543,8 @@ header.top h1 em {
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.15s;
+  touch-action: manipulation; /* no double-tap-zoom on tabs */
+  user-select: none;
 }
 .htab:hover {
   background: rgba(255, 255, 255, 0.26);
@@ -574,6 +576,63 @@ header.top h1 em {
 .htab-badge.active {
   background: var(--rust);
   color: #fff;
+}
+.htab-edit {
+  width: 150px;
+  max-width: 56vw;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid currentColor;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 0;
+  margin: 0;
+  outline: none;
+}
+.htab-edit-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--navy);
+  opacity: 0.55;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 5px;
+}
+.htab-edit-btn:hover {
+  opacity: 1;
+  background: rgba(38, 42, 83, 0.08);
+}
+.htab-close {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: inherit;
+  opacity: 0.55;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+  margin-left: 2px;
+  border-radius: 5px;
+}
+.htab-close:hover {
+  opacity: 1;
+}
+.danger-link {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 12px;
+  color: #b23b1f !important;
 }
 .htab-add {
   padding: 8px 13px;
