@@ -1465,8 +1465,26 @@ footer.site .cargo {
   line-height: 1.6;
   font-size: 14.5px;
 }
+/* Flush-left lists: text aligns with the paragraphs, bullet hangs in the gutter */
 .prose ul {
-  padding-left: 20px;
+  list-style: none;
+  padding-left: 0;
+  margin: 8px 0;
+}
+.prose li {
+  position: relative;
+  padding-left: 0;
+  margin-bottom: 8px;
+}
+.prose li::before {
+  content: '';
+  position: absolute;
+  left: -13px;
+  top: 0.62em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--rust);
 }
 .prose .updated {
   color: var(--ink-soft);
