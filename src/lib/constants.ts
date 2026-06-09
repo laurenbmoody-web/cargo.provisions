@@ -1,5 +1,5 @@
 // Shared constants.
-export const CONSENT_VERSION = '2026-06-08';
+export const CONSENT_VERSION = '2026-06-09';
 
 export const ROLES = ['Head chef', 'Sole chef', 'Sous chef', 'Freelance', 'Other'];
 export const VESSEL_TYPES: { value: string; label: string }[] = [
