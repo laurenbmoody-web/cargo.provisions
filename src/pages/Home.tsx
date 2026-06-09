@@ -1,43 +1,16 @@
-import { useEffect, useState } from 'react';
 import { Catalogue } from '../components/Catalogue';
 import { ListTabs } from '../components/ListTabs';
-import { Onboarding } from '../components/Onboarding';
 import { Footer } from '../components/Footer';
 import { StorageNotice } from '../components/StorageNotice';
 import { useAuth } from '../lib/auth';
 import { useOrder } from '../lib/order';
 import { useSignIn, useOrderDrawer } from '../lib/ui';
-import { supabase } from '../lib/supabase';
 
 export function Home() {
   const { user, configured } = useAuth();
   const { count } = useOrder();
   const { openSignIn } = useSignIn();
   const { openDrawer } = useOrderDrawer();
-  const [needsOnboarding, setNeedsOnboarding] = useState(false);
-
-  // First-time onboarding: show if no profile row yet.
-  useEffect(() => {
-    let cancelled = false;
-    if (!user) {
-      setNeedsOnboarding(false);
-      return;
-    }
-    // Show onboarding until the user has accepted terms (captures consent).
-    // Keyed on terms_accepted_at, not mere row existence, so it still works
-    // even if a DB trigger pre-creates a bare profile row.
-    supabase
-      .from('chef_profiles')
-      .select('terms_accepted_at')
-      .eq('id', user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!cancelled) setNeedsOnboarding(!data || !data.terms_accepted_at);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
 
   return (
     <>
@@ -78,8 +51,6 @@ export function Home() {
           <button onClick={openDrawer}>View list</button>
         </div>
       </div>
-
-      {needsOnboarding && <Onboarding onDone={() => setNeedsOnboarding(false)} />}
 
       <StorageNotice />
     </>

@@ -7,8 +7,6 @@ import {
   listCsv,
   listSubject,
   mailtoHref,
-  brandedPrintHtml,
-  printHtml,
   downloadCsv,
   csvFilename,
   copyText,
@@ -16,23 +14,21 @@ import {
   type ExportGroup,
   type Galley,
 } from '../lib/listExport';
+import { downloadListPdf } from '../lib/listPdf';
 
 /**
  * Uniform export actions for every list surface (drawer, full page, past
  * lists): Copy (primary) · Email (mailto) · Download ▾ (PDF / CSV). All output
- * is serialised from the list data, never the DOM. After any export it calls
- * onExported() so the caller can offer 'Mark this list as sent?'.
+ * is serialised from the list data, never the DOM. PDF downloads a real file.
  */
 export function ExportButtons({
   title,
   groups,
   count,
-  onExported,
 }: {
   title: string;
   groups: ExportGroup[];
   count: number;
-  onExported?: () => void | Promise<void>;
 }) {
   const { user } = useAuth();
   const toast = useToast();
@@ -75,28 +71,23 @@ export function ExportButtons({
     toast('This list is empty');
     return true;
   };
-  const after = () => {
-    void onExported?.();
-  };
 
   const doCopy = async () => {
     if (!count) return empty();
     const ok = await copyText(listText(title, groups, count, header));
     toast(ok ? 'Copied — paste into WhatsApp or email' : 'Copy failed — long-press to select');
-    after();
   };
 
   const doEmail = () => {
     if (!count) return empty();
     window.location.href = mailtoHref(listSubject(title), listText(title, groups, count, header));
-    after();
   };
 
-  const doPdf = () => {
+  const doPdf = async () => {
     setDlOpen(false);
     if (!count) return empty();
-    printHtml(brandedPrintHtml(title, galley, groups, count));
-    after();
+    toast('Preparing PDF…');
+    await downloadListPdf(title, galley, groups, count);
   };
 
   const doCsv = () => {
@@ -104,7 +95,6 @@ export function ExportButtons({
     if (!count) return empty();
     downloadCsv(csvFilename(vessel || title), listCsv(groups, header));
     toast('CSV downloaded');
-    after();
   };
 
   return (
@@ -132,7 +122,7 @@ export function ExportButtons({
             <div className="ea-menu" role="menu">
               <button className="ea-menu-item" role="menuitem" onClick={doPdf}>
                 <b>PDF</b>
-                <span>to send or print</span>
+                <span>download to send or print</span>
               </button>
               <button className="ea-menu-item" role="menuitem" onClick={doCsv}>
                 <b>CSV</b>

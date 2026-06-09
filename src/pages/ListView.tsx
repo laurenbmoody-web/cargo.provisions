@@ -10,7 +10,6 @@ import { ListItemRow } from '../components/ListItemRow';
 import { ExportButtons } from '../components/ExportButtons';
 import { groupActive } from '../lib/activeList';
 import { useActiveListActions } from '../lib/useActiveListActions';
-import { LISTS_UPDATED_EVENT } from '../lib/order';
 import { groupRows, countRows, type ExportRow } from '../lib/listExport';
 
 export function ListView() {
@@ -123,7 +122,7 @@ export function ListView() {
 
         <div className="lv-bar">
           <div className="wrap lv-bar-inner">
-            <ExportButtons title={order.title} groups={grouped} count={order.count} onExported={actions.promptSent} />
+            <ExportButtons title={order.title} groups={grouped} count={order.count} />
           </div>
         </div>
         <Footer />
@@ -160,16 +159,6 @@ export function ListView() {
     if (v !== meta.title) {
       await supabase.from('chef_orders').update({ title: v }).eq('id', id!);
       setMeta({ ...meta, title: v });
-    }
-  };
-
-  const promptSent = async () => {
-    if (sent) return;
-    if (window.confirm('Mark this list as sent?')) {
-      await supabase.from('chef_orders').update({ status: 'sent' }).eq('id', id!);
-      setMeta({ ...meta, status: 'sent' });
-      window.dispatchEvent(new Event(LISTS_UPDATED_EVENT));
-      toast('Marked as sent');
     }
   };
 
@@ -223,7 +212,7 @@ export function ListView() {
 
       <div className="lv-bar">
         <div className="wrap lv-bar-inner">
-          <ExportButtons title={meta.title} groups={groups} count={count} onExported={promptSent} />
+          <ExportButtons title={meta.title} groups={groups} count={count} />
         </div>
       </div>
       <Footer />
