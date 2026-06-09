@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './lib/auth';
 import { OrderProvider } from './lib/order';
 import { SignInProvider } from './lib/ui';
+import { TourProvider } from './lib/tour';
 import { ToastProvider } from './components/Toast';
 import { NavBar } from './components/NavBar';
 import { OrderDrawer } from './components/OrderDrawer';
@@ -21,6 +22,7 @@ export default function App() {
         <OrderProvider>
           <ToastProvider>
             <SignInProvider>
+              <TourProvider>
               <NavBar />
               <Routes>
                 <Route path="/" element={<Home />} />
@@ -35,6 +37,7 @@ export default function App() {
               </Routes>
               <OrderDrawer />
               <div id="printArea" />
+              </TourProvider>
             </SignInProvider>
           </ToastProvider>
         </OrderProvider>

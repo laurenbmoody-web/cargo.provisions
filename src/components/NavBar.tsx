@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import { useOrder } from '../lib/order';
 import { useSignIn, useSearch, useOrderDrawer } from '../lib/ui';
+import { useTour } from '../lib/tour';
 import { supabase } from '../lib/supabase';
 import { PROFILE_FIELDS, PROFILE_UPDATED_EVENT, profileCompletion } from '../lib/profile';
 
@@ -58,6 +59,7 @@ export function NavBar() {
   const { openSignIn } = useSignIn();
   const { query, setQuery } = useSearch();
   const { openDrawer } = useOrderDrawer();
+  const { startTour } = useTour();
   const { count } = useOrder();
   const navigate = useNavigate();
   const location = useLocation();
@@ -222,6 +224,17 @@ export function NavBar() {
                   <button className="acct-item" role="menuitem" onClick={() => go('/help')}>
                     <HelpIcon size={18} />
                     Help
+                  </button>
+                  <button
+                    className="acct-item"
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      startTour();
+                    }}
+                  >
+                    <HelpIcon size={18} />
+                    Show tips
                   </button>
                   <div className="acct-divider" />
                   <button

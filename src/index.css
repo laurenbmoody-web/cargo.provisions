@@ -1949,6 +1949,123 @@ footer.site .ig {
   display: inline-flex;
   align-items: center;
 }
+.footer-tips {
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  padding: 0;
+}
+.footer-tips:hover {
+  color: var(--navy);
+}
+
+/* ---------- First-run guided tour (spotlight coachmarks) ---------- */
+.tour-root {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+.tour-block {
+  position: fixed;
+  inset: 0;
+}
+.tour-dim {
+  position: fixed;
+  inset: 0;
+  background: rgba(27, 30, 61, 0.6);
+}
+.tour-hole {
+  position: fixed;
+  border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(27, 30, 61, 0.62);
+  pointer-events: none;
+  transition: top 0.2s ease, left 0.2s ease, width 0.2s ease, height 0.2s ease;
+}
+.tour-card {
+  position: fixed;
+  width: min(320px, calc(100vw - 24px));
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: 0 16px 44px rgba(27, 30, 61, 0.35);
+  overflow: hidden;
+  transition: top 0.2s ease, left 0.2s ease;
+}
+.tour-card-body {
+  padding: 16px 18px 12px;
+}
+.tour-card-body h3 {
+  font-family: 'DM Serif Display', serif;
+  font-weight: 400;
+  font-size: 19px;
+  color: var(--navy);
+  margin: 0 0 5px;
+}
+.tour-card-body p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+.tour-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--line);
+}
+.tour-dots {
+  display: flex;
+  gap: 6px;
+}
+.tour-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--line);
+}
+.tour-dot.on {
+  background: var(--rust);
+}
+.tour-card-btns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tour-skip {
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+  padding: 8px 10px;
+}
+.tour-skip:hover {
+  color: var(--ink);
+}
+.tour-next {
+  border: none;
+  background: var(--navy);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  font-size: 13.5px;
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.tour-next:hover {
+  background: var(--navy-deep);
+}
+.tour-root.no-motion .tour-hole,
+.tour-root.no-motion .tour-card {
+  transition: none;
+}
 footer.site .ig:hover {
   color: var(--rust);
 }
