@@ -1,0 +1,70 @@
+<!--
+  Cargo Provisions — Magic Link email template.
+  Paste into Supabase → Authentication → Email Templates → "Magic Link".
+  Suggested subject:  Your Cargo Provisions sign-in link
+  Uses Supabase's {{ .ConfirmationURL }} variable. Table-based + inline CSS so
+  it renders consistently across email clients. Logo is a hosted PNG (clients
+  don't render SVG): https://cargoprovisions.netlify.app/email-logo.png
+-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0;padding:0;background:#F0EDE8;">
+  <tr>
+    <td align="center" style="padding:32px 16px;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+      <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="width:480px;max-width:100%;background:#FFFDF9;border:1px solid #E6E1D8;border-radius:14px;overflow:hidden;">
+
+        <!-- Header -->
+        <tr>
+          <td align="center" style="background:#262A53;padding:30px 24px;">
+            <img src="https://cargoprovisions.netlify.app/email-logo.png" alt="Cargo Provisions" width="240" style="display:block;width:240px;max-width:70%;height:auto;border:0;" />
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:32px 32px 8px;">
+            <h1 style="margin:0 0 10px;font-family:Georgia,'Times New Roman',serif;font-weight:400;font-size:24px;line-height:1.2;color:#262A53;">
+              Your sign-in link
+            </h1>
+            <p style="margin:0 0 22px;font-size:15px;line-height:1.55;color:#23262F;">
+              Tap the button below to sign in to Cargo Provisions and pick up your list. This link
+              works once and expires shortly — no password needed.
+            </p>
+
+            <!-- Bulletproof button -->
+            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+              <tr>
+                <td align="center" bgcolor="#262A53" style="border-radius:9px;">
+                  <a href="{{ .ConfirmationURL }}" target="_blank"
+                     style="display:inline-block;padding:14px 30px;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:9px;">
+                    Sign in to Provisions
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0 0 6px;font-size:12px;line-height:1.5;color:#5A5F6D;">
+              Or paste this link into your browser:
+            </p>
+            <p style="margin:0 0 22px;font-size:12px;line-height:1.5;word-break:break-all;">
+              <a href="{{ .ConfirmationURL }}" target="_blank" style="color:#C65A1A;text-decoration:underline;">{{ .ConfirmationURL }}</a>
+            </p>
+
+            <p style="margin:0 0 4px;font-size:13px;line-height:1.55;color:#5A5F6D;border-top:1px solid #E6E1D8;padding-top:18px;">
+              If you didn't request this, you can safely ignore this email — nothing will happen and no account is created.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding:18px 24px 26px;">
+            <p style="margin:0;font-size:12px;line-height:1.5;color:#9b98ad;">
+              A free tool by Cargo Technology ⚓<br />
+              <a href="https://cargoprovisions.netlify.app" target="_blank" style="color:#9b98ad;text-decoration:none;">cargoprovisions.netlify.app</a>
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
