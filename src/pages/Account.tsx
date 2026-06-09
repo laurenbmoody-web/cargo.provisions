@@ -6,6 +6,7 @@ import { useToast } from '../components/Toast';
 import { Footer } from '../components/Footer';
 import { Spinner } from '../components/Spinner';
 import { ROLES, VESSEL_TYPES, USAGE_TYPES } from '../lib/constants';
+import { notifyProfileUpdated } from '../lib/profile';
 
 interface ProfileRow {
   id: string;
@@ -101,6 +102,7 @@ export function Account() {
       { onConflict: 'id' },
     );
     setSavingProfile(false);
+    if (!error) notifyProfileUpdated();
     toast(error ? error.message : 'Profile saved');
   };
 

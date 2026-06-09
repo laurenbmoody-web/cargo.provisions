@@ -6,6 +6,7 @@ import { useOrder } from '../lib/order';
 import { useToast } from '../components/Toast';
 import { Footer } from '../components/Footer';
 import { Spinner } from '../components/Spinner';
+import { ListDetail, type DetailList } from '../components/ListDetail';
 
 interface ListSummary {
   id: string;
@@ -22,6 +23,11 @@ const MoreIcon = () => (
     <circle cx="19" cy="12" r="1.8" />
   </svg>
 );
+const StarIcon = ({ filled }: { filled: boolean }) => (
+  <svg width="19" height="19" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2.5l2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.3l-5.8 3.05 1.1-6.46-4.69-4.58 6.49-.94L12 2.5z" />
+  </svg>
+);
 
 export function Lists() {
   const { user, configured } = useAuth();
@@ -32,12 +38,41 @@ export function Lists() {
   const [lists, setLists] = useState<ListSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [menuId, setMenuId] = useState<string | null>(null);
+  const [favs, setFavs] = useState<Set<string>>(new Set());
+  const [detail, setDetail] = useState<DetailList | null>(null);
+
+  const favKey = user ? `provisions:favs:${user.id}` : '';
 
   useEffect(() => {
     if (configured && !user) navigate('/', { replace: true });
   }, [configured, user, navigate]);
 
-  // Close the overflow menu on outside click / Escape.
+  // load favourites (per-user, local)
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const raw = window.localStorage.getItem(`provisions:favs:${user.id}`);
+      setFavs(new Set(raw ? (JSON.parse(raw) as string[]) : []));
+    } catch {
+      /* ignore */
+    }
+  }, [user]);
+
+  const toggleFav = (id: string) => {
+    setFavs((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      try {
+        if (favKey) window.localStorage.setItem(favKey, JSON.stringify([...next]));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  };
+
+  // close overflow menu on outside click / Escape
   useEffect(() => {
     if (!menuId) return;
     const onDoc = (e: MouseEvent) => {
@@ -89,23 +124,23 @@ export function Lists() {
     void load();
   };
 
-  const setStatus = async (o: ListSummary, status: 'open' | 'saved' | 'sent') => {
+  const markSent = async (o: ListSummary) => {
     setMenuId(null);
-    if (status === 'open') {
-      // One open list at a time: archive any current open list first.
-      await supabase
-        .from('chef_orders')
-        .update({ status: 'saved' })
-        .eq('user_id', user!.id)
-        .eq('status', 'open');
-    }
-    await supabase.from('chef_orders').update({ status }).eq('id', o.id);
+    await supabase.from('chef_orders').update({ status: 'sent' }).eq('id', o.id);
+    await load();
+    if (o.status === 'open') reload(); // active list was sent → catalogue starts fresh
+    toast('Marked as sent');
+  };
+
+  const makeActive = async (o: ListSummary) => {
+    setMenuId(null);
+    if (!user) return;
+    await supabase.from('chef_orders').update({ status: 'saved' }).eq('user_id', user.id).eq('status', 'open');
+    await supabase.from('chef_orders').update({ status: 'open' }).eq('id', o.id);
     await load();
     reload();
-    if (status === 'open') {
-      toast('List opened — find it on the catalogue');
-      navigate('/');
-    }
+    toast('List opened — find it on the catalogue');
+    navigate('/');
   };
 
   const duplicateList = async (o: ListSummary) => {
@@ -142,11 +177,7 @@ export function Lists() {
 
   const newList = async () => {
     if (!user) return;
-    await supabase
-      .from('chef_orders')
-      .update({ status: 'saved' })
-      .eq('user_id', user.id)
-      .eq('status', 'open');
+    await supabase.from('chef_orders').update({ status: 'saved' }).eq('user_id', user.id).eq('status', 'open');
     await supabase.from('chef_orders').insert({ user_id: user.id, status: 'open' });
     await load();
     reload();
@@ -157,7 +188,9 @@ export function Lists() {
   if (!configured) {
     return (
       <div className="account">
-        <h1>My lists</h1>
+        <h1 className="page-title">
+          My <em>lists</em>
+        </h1>
         <p style={{ color: 'var(--ink-soft)' }}>Sign-in isn't configured in this environment.</p>
         <Link className="btn" to="/">
           Back to catalogue
@@ -175,29 +208,30 @@ export function Lists() {
     );
   }
 
+  // favourites sort to the top (each subset already newest-first)
+  const sorted = [...lists].sort((a, b) => Number(favs.has(b.id)) - Number(favs.has(a.id)));
+
   return (
     <>
-      <div className="account">
-        <h1>My lists</h1>
-        <p style={{ color: 'var(--ink-soft)', marginTop: 0 }}>
-          Your provisioning lists · <Link to="/account">Account &amp; profile</Link> ·{' '}
-          <Link to="/">Back to catalogue</Link>
-        </p>
+      <div className="account lists-page">
+        <div className="lists-head">
+          <h1 className="page-title">
+            My <em>lists</em>
+          </h1>
+          <button className="btn primary" onClick={newList}>
+            Start a new list
+          </button>
+        </div>
 
-        <div className="panel">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-            <h2 style={{ margin: 0 }}>Lists</h2>
-            <button className="btn primary" onClick={newList}>
-              Start a new list
-            </button>
-          </div>
-
-          {lists.length === 0 ? (
-            <p style={{ color: 'var(--ink-soft)' }}>No saved lists yet.</p>
-          ) : (
-            lists.map((o) => (
+        {sorted.length === 0 ? (
+          <p style={{ color: 'var(--ink-soft)' }}>No saved lists yet.</p>
+        ) : (
+          sorted.map((o) => {
+            const fav = favs.has(o.id);
+            const sent = o.status === 'sent';
+            return (
               <div key={o.id} className="list-card">
-                <div className="lc-main">
+                <button className="lc-open" onClick={() => setDetail(o)}>
                   <div className="lc-title">{o.title}</div>
                   <div className="lc-meta">
                     {o.itemCount} item{o.itemCount === 1 ? '' : 's'} · updated{' '}
@@ -207,15 +241,20 @@ export function Lists() {
                       year: 'numeric',
                     })}
                   </div>
-                </div>
+                </button>
 
-                <span className={`badge ${o.status}`}>{o.status}</span>
+                <button
+                  className={`star-btn${fav ? ' on' : ''}`}
+                  aria-label={fav ? 'Unfavourite' : 'Favourite'}
+                  aria-pressed={fav}
+                  onClick={() => toggleFav(o.id)}
+                >
+                  <StarIcon filled={fav} />
+                </button>
 
-                {o.status !== 'open' && (
-                  <button className="btn" onClick={() => setStatus(o, 'open')}>
-                    Open
-                  </button>
-                )}
+                {o.status === 'open' && <span className="badge open">Open</span>}
+                {sent && <span className="badge sent">Sent</span>}
+
                 <button className="btn" onClick={() => renameList(o)}>
                   Rename
                 </button>
@@ -235,13 +274,12 @@ export function Lists() {
                       <button className="overflow-item" role="menuitem" onClick={() => duplicateList(o)}>
                         Duplicate
                       </button>
-                      {o.status !== 'saved' && (
-                        <button className="overflow-item" role="menuitem" onClick={() => setStatus(o, 'saved')}>
-                          Mark as saved
+                      {sent ? (
+                        <button className="overflow-item" role="menuitem" onClick={() => makeActive(o)}>
+                          Mark as open
                         </button>
-                      )}
-                      {o.status !== 'sent' && (
-                        <button className="overflow-item" role="menuitem" onClick={() => setStatus(o, 'sent')}>
+                      ) : (
+                        <button className="overflow-item" role="menuitem" onClick={() => markSent(o)}>
                           Mark as sent
                         </button>
                       )}
@@ -253,10 +291,21 @@ export function Lists() {
                   )}
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            );
+          })
+        )}
       </div>
+
+      {detail && (
+        <ListDetail
+          list={detail}
+          onClose={() => setDetail(null)}
+          onChanged={() => {
+            void load();
+          }}
+        />
+      )}
+      <div id="printArea" />
       <Footer />
     </>
   );
