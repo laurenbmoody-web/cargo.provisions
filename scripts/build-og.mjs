@@ -54,7 +54,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.
 
   <text x="${W / 2}" y="566" text-anchor="middle"
     font-family="Plus Jakarta Sans" font-weight="600" font-size="22"
-    letter-spacing="2" fill="#9b98ad">cargoprovisions.netlify.app</text>
+    letter-spacing="2" fill="#9b98ad">provisions.cargotechnology.co.uk</text>
 </svg>`;
 
 const resvg = new Resvg(svg, {
