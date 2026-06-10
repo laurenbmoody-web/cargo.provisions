@@ -57,6 +57,23 @@ export function Catalogue() {
   const { query, setQuery } = useSearch();
   const [selected, setSelected] = useState<string[]>([]); // selected cuisine codes (OR logic)
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [sortAZ, setSortAZ] = useState<boolean>(() => {
+    try {
+      return window.localStorage.getItem('provisions:sortAZ') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const toggleSortAZ = () =>
+    setSortAZ((v) => {
+      const next = !v;
+      try {
+        window.localStorage.setItem('provisions:sortAZ', next ? '1' : '0');
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
 
   const filtering = query.trim() !== '' || selected.length > 0;
   const q = query.trim().toLowerCase();
@@ -195,6 +212,14 @@ export function Catalogue() {
                 </div>
               )}
             </div>
+            <button
+              className={`filter-btn${sortAZ ? ' active' : ''}`}
+              aria-pressed={sortAZ}
+              title={sortAZ ? 'Showing items A–Z' : 'Sort items A–Z within each category'}
+              onClick={toggleSortAZ}
+            >
+              A–Z
+            </button>
           </div>
           {selected.length > 0 && (
             <div className="showing-row">
@@ -222,7 +247,8 @@ export function Catalogue() {
               )}
               {visibleCats.map((c) => {
                 const open = filtering || expanded.has(c.name);
-                const shownItems = filtering ? filteredByCat[c.name] : c.items;
+                const base = filtering ? filteredByCat[c.name] : c.items;
+                const shownItems = sortAZ ? [...base].sort((a, b) => a.name.localeCompare(b.name)) : base;
                 const badge = inCount(c.items);
                 return (
                   <section key={c.name} className={`cat${open ? '' : ' collapsed'}`} id={'c-' + slug(c.name)}>
