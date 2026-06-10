@@ -57,18 +57,20 @@ export function Catalogue() {
   const { query, setQuery } = useSearch();
   const [selected, setSelected] = useState<string[]>([]); // selected cuisine codes (OR logic)
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const [sortAZ, setSortAZ] = useState<boolean>(() => {
+  type SortDir = 'none' | 'az' | 'za';
+  const [sortDir, setSortDir] = useState<SortDir>(() => {
     try {
-      return window.localStorage.getItem('provisions:sortAZ') === '1';
+      const v = window.localStorage.getItem('provisions:sortDir');
+      return v === 'az' || v === 'za' ? v : 'none';
     } catch {
-      return false;
+      return 'none';
     }
   });
-  const toggleSortAZ = () =>
-    setSortAZ((v) => {
-      const next = !v;
+  const cycleSort = () =>
+    setSortDir((d) => {
+      const next: SortDir = d === 'none' ? 'az' : d === 'az' ? 'za' : 'none';
       try {
-        window.localStorage.setItem('provisions:sortAZ', next ? '1' : '0');
+        window.localStorage.setItem('provisions:sortDir', next);
       } catch {
         /* ignore */
       }
@@ -213,12 +215,18 @@ export function Catalogue() {
               )}
             </div>
             <button
-              className={`filter-btn${sortAZ ? ' active' : ''}`}
-              aria-pressed={sortAZ}
-              title={sortAZ ? 'Showing items A–Z' : 'Sort items A–Z within each category'}
-              onClick={toggleSortAZ}
+              className={`filter-btn${sortDir !== 'none' ? ' active' : ''}`}
+              aria-pressed={sortDir !== 'none'}
+              title={
+                sortDir === 'none'
+                  ? 'Sort items A–Z within each category'
+                  : sortDir === 'az'
+                    ? 'Sorted A–Z — tap for Z–A'
+                    : 'Sorted Z–A — tap to clear'
+              }
+              onClick={cycleSort}
             >
-              A–Z
+              {sortDir === 'za' ? 'Z–A' : 'A–Z'}
             </button>
           </div>
           {selected.length > 0 && (
@@ -248,7 +256,12 @@ export function Catalogue() {
               {visibleCats.map((c) => {
                 const open = filtering || expanded.has(c.name);
                 const base = filtering ? filteredByCat[c.name] : c.items;
-                const shownItems = sortAZ ? [...base].sort((a, b) => a.name.localeCompare(b.name)) : base;
+                const shownItems =
+                  sortDir === 'none'
+                    ? base
+                    : [...base].sort((a, b) =>
+                        sortDir === 'az' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name),
+                      );
                 const badge = inCount(c.items);
                 return (
                   <section key={c.name} className={`cat${open ? '' : ' collapsed'}`} id={'c-' + slug(c.name)}>
