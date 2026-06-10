@@ -215,7 +215,7 @@ export function Catalogue() {
               )}
             </div>
             <button
-              className={`filter-btn${sortDir !== 'none' ? ' active' : ''}`}
+              className={`filter-btn sort-chip${sortDir !== 'none' ? ' active' : ''}`}
               aria-pressed={sortDir !== 'none'}
               title={
                 sortDir === 'none'
@@ -227,6 +227,9 @@ export function Catalogue() {
               onClick={cycleSort}
             >
               {sortDir === 'za' ? 'Z–A' : 'A–Z'}
+              <span className="sort-arrow" aria-hidden="true">
+                {sortDir === 'az' ? '↓' : sortDir === 'za' ? '↑' : '↕'}
+              </span>
             </button>
           </div>
           {selected.length > 0 && (
